@@ -1,8 +1,10 @@
+// +build ignore
+
 package main
 
 import (
 	"fmt"
-	"github.com/neonxp/tamtam-go"
+	"github.com/neonxp/tamtam"
 	"log"
 	"net/http"
 	"os"

@@ -8,7 +8,7 @@
 
 Её пока нет :)
 
-Но http://godoc.org/github.com/neonxp/tamtam-go/ может вам помочь.
+Но http://godoc.org/github.com/neonxp/tamtam/ может вам помочь.
 
 ## Статус
 
