@@ -308,7 +308,12 @@ func (a *Api) GetSubscriptions() (*GetSubscriptionsResult, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-func (a *Api) Subscribe(subscription *SubscriptionRequestBody) (*SimpleQueryResult, error) {
+func (a *Api) Subscribe(subscribeURL string, updateTypes []string) (*SimpleQueryResult, error) {
+	subscription := &SubscriptionRequestBody{
+		Url:         subscribeURL,
+		UpdateTypes: updateTypes,
+		Version:     a.version,
+	}
 	result := new(SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.request(http.MethodPost, "subscriptions", values, subscription)

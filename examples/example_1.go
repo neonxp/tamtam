@@ -1,5 +1,3 @@
-// +build ignore
-
 /**
  * Webhook example
  */
@@ -30,9 +28,7 @@ func main() {
 	for _, s := range subs.Subscriptions {
 		_, _ = api.Unsubscribe(s.Url)
 	}
-	subscriptionResp, err := api.Subscribe(&tamtam.SubscriptionRequestBody{
-		Url: " https://576df2ec.ngrok.io/webhook", // Replace by your webhook!
-	})
+	subscriptionResp, err := api.Subscribe("https://576df2ec.ngrok.io/webhook", []string{})
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
 	ch := make(chan interface{}) // Channel with updates from TamTam
