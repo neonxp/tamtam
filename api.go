@@ -5,6 +5,7 @@ package tamtam
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,19 +13,26 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 type Api struct {
-	key string
-	url *url.URL
+	key     string
+	version string
+	url     *url.URL
+	timeout int
+	pause   int
 }
 
 // New TamTam Api object
 func New(key string) *Api {
 	u, _ := url.Parse("https://botapi.tamtam.chat/")
 	return &Api{
-		key: key,
-		url: u,
+		key:     key,
+		url:     u,
+		version: "1.0.3",
+		timeout: 30,
+		pause:   1,
 	}
 }
 
@@ -53,58 +61,35 @@ func (a *Api) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+func (a *Api) GetUpdatesLoop(ctx context.Context, updates chan interface{}) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(time.Duration(a.pause) * time.Second):
+			var marker int64
+			for {
+				upds, err := a.getUpdates(50, a.timeout, marker, []string{})
+				if err != nil {
+					return err
+				}
+				if len(upds.Updates) == 0 {
+					break
+				}
+				for _, u := range upds.Updates {
+					updates <- a.bytesToProperUpdate(u)
+				}
+				marker = upds.Marker
+			}
+		}
+	}
+}
+
 func (a *Api) GetHandler(updates chan interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		u := new(Update)
 		b, _ := ioutil.ReadAll(r.Body)
-		_ = json.Unmarshal(b, u)
-		switch u.UpdateType {
-		case UpdateTypeMessageCallback:
-			upd := new(UpdateMessageCallback)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeMessageCreated:
-			upd := new(UpdateMessageCreated)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeMessageRemoved:
-			upd := new(UpdateMessageRemoved)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeMessageEdited:
-			upd := new(UpdateMessageEdited)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeMessageRestored:
-			upd := new(UpdateMessageRestored)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeBotAdded:
-			upd := new(UpdateBotAdded)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeBotRemoved:
-			upd := new(UpdateBotRemoved)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeUserAdded:
-			upd := new(UpdateUserAdded)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeUserRemoved:
-			upd := new(UpdateUserRemoved)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeBotStarted:
-			upd := new(UpdateBotStarted)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		case UpdateTypeChatTitleChanged:
-			upd := new(UpdateChatTitleChanged)
-			_ = json.Unmarshal(b, upd)
-			updates <- *upd
-		}
+		updates <- a.bytesToProperUpdate(b)
 	}
 }
 
@@ -346,7 +331,63 @@ func (a *Api) Unsubscribe(subscriptionURL string) (*SimpleQueryResult, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-func (a *Api) GetUpdates(limit int, timeout int, marker int64, types []string) (*UpdateList, error) {
+// endregion
+
+// region Internal
+
+func (a *Api) bytesToProperUpdate(b []byte) interface{} {
+	u := new(Update)
+	_ = json.Unmarshal(b, u)
+	switch u.UpdateType {
+	case UpdateTypeMessageCallback:
+		upd := UpdateMessageCallback{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeMessageCreated:
+		upd := UpdateMessageCreated{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeMessageRemoved:
+		upd := UpdateMessageRemoved{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeMessageEdited:
+		upd := UpdateMessageEdited{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeMessageRestored:
+		upd := UpdateMessageRestored{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeBotAdded:
+		upd := UpdateBotAdded{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeBotRemoved:
+		upd := UpdateBotRemoved{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeUserAdded:
+		upd := UpdateUserAdded{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeUserRemoved:
+		upd := UpdateUserRemoved{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeBotStarted:
+		upd := UpdateBotStarted{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	case UpdateTypeChatTitleChanged:
+		upd := UpdateChatTitleChanged{}
+		_ = json.Unmarshal(b, &upd)
+		return upd
+	}
+	return nil
+}
+
+func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (*UpdateList, error) {
 	result := new(UpdateList)
 	values := url.Values{}
 	if limit > 0 {
@@ -363,7 +404,7 @@ func (a *Api) GetUpdates(limit int, timeout int, marker int64, types []string) (
 			values.Add("types", t)
 		}
 	}
-	body, err := a.request(http.MethodDelete, "updates", values, nil)
+	body, err := a.request(http.MethodGet, "updates", values, nil)
 	if err != nil {
 		return result, err
 	}
@@ -371,15 +412,12 @@ func (a *Api) GetUpdates(limit int, timeout int, marker int64, types []string) (
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// endregion
-
-// region Internal
-
 func (a *Api) request(method, path string, query url.Values, body interface{}) (io.ReadCloser, error) {
 	c := http.DefaultClient
 	u := *a.url
 	u.Path = path
 	query.Set("access_token", a.key)
+	query.Set("v", a.version)
 	u.RawQuery = query.Encode()
 	j, err := json.Marshal(body)
 	if err != nil {

@@ -3,6 +3,8 @@
  */
 package tamtam
 
+import "encoding/json"
+
 type ActionRequestBody struct {
 	Action SenderAction `json:"action"`
 }
@@ -373,7 +375,7 @@ type Message struct {
 	// Forwarder or replied message
 	Link LinkedMessage `json:"link,omitempty"`
 	// Body of created message. Text + attachments. Could be null if message contains only forwarded message.
-	Body MessageBody `json:"message"`
+	Body MessageBody `json:"body"`
 }
 
 // Schema representing body of message
@@ -687,7 +689,7 @@ type UpdateUserRemoved struct {
 // List of all updates in chats your bot participated in
 type UpdateList struct {
 	// Page of updates
-	Updates []Update `json:"updates"`
+	Updates []json.RawMessage `json:"updates"`
 	// Pointer to the next data page
 	Marker int64 `json:"marker"`
 }

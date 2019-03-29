@@ -1,5 +1,8 @@
 // +build ignore
 
+/**
+ * Webhook example
+ */
 package main
 
 import (
@@ -23,9 +26,12 @@ func main() {
 	log.Printf("Get chat: %#v %#v", chat, err)
 	msgs, err := api.GetMessages(chats.Chats[0].ChatId, nil, 0, 0, 0)
 	log.Printf("Get messages: %#v %#v", msgs, err)
-
+	subs, _ := api.GetSubscriptions()
+	for _, s := range subs.Subscriptions {
+		_, _ = api.Unsubscribe(s.Url)
+	}
 	subscriptionResp, err := api.Subscribe(&tamtam.SubscriptionRequestBody{
-		Url: "https://4940675e.ngrok.io/webhook", // Replace by your webhook!
+		Url: " https://576df2ec.ngrok.io/webhook", // Replace by your webhook!
 	})
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
