@@ -351,6 +351,9 @@ func (a *Api) bytesToProperUpdate(b []byte) interface{} {
 	case UpdateTypeMessageCreated:
 		upd := UpdateMessageCreated{}
 		_ = json.Unmarshal(b, &upd)
+		for _, att := range upd.Message.Body.RawAttachments {
+			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
+		}
 		return upd
 	case UpdateTypeMessageRemoved:
 		upd := UpdateMessageRemoved{}
@@ -359,6 +362,9 @@ func (a *Api) bytesToProperUpdate(b []byte) interface{} {
 	case UpdateTypeMessageEdited:
 		upd := UpdateMessageEdited{}
 		_ = json.Unmarshal(b, &upd)
+		for _, att := range upd.Message.Body.RawAttachments {
+			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
+		}
 		return upd
 	case UpdateTypeMessageRestored:
 		upd := UpdateMessageRestored{}
@@ -390,6 +396,50 @@ func (a *Api) bytesToProperUpdate(b []byte) interface{} {
 		return upd
 	}
 	return nil
+}
+
+func (a *Api) bytesToProperAttachment(b []byte) interface{} {
+	attachment := new(Attachment)
+	_ = json.Unmarshal(b, attachment)
+	switch attachment.Type {
+	case AttachmentAudio:
+		res := &AudioAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentContact:
+		res := &ContactAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentFile:
+		res := &FileAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentImage:
+		res := &PhotoAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentKeyboard:
+		res := &InlineKeyboardAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentLocation:
+		res := &LocationAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentShare:
+		res := &ShareAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentSticker:
+		res := &StickerAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	case AttachmentVideo:
+		res := &VideoAttachment{}
+		_ = json.Unmarshal(b, &res)
+		return res
+	}
+	return attachment
 }
 
 func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (*UpdateList, error) {

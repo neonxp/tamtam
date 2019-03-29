@@ -387,7 +387,8 @@ type MessageBody struct {
 	// Message text
 	Text string `json:"text"`
 	// Message attachments. Could be one of `Attachment` type. See description of this schema
-	Attachments []Attachment `json:"attachments"`
+	RawAttachments []json.RawMessage `json:"attachments"`
+	Attachments    []interface{}
 	// In case this message is repled to, it is the unique identifier of the replied message
 	ReplyTo string `json:"reply_to,omitempty"`
 }
