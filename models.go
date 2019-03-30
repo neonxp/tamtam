@@ -113,7 +113,7 @@ type CallbackAnswer struct {
 
 // After pressing this type of button client sends to server payload it contains
 type CallbackButton struct {
-	Type string `json:"type,omitempty"`
+	Type ButtonType `json:"type,omitempty"`
 	// Visible text of button
 	Text string `json:"text"`
 	// Intent of button. Affects clients representation.
@@ -301,8 +301,8 @@ type Image struct {
 type InlineKeyboardAttachment struct {
 	Type string `json:"type,omitempty"`
 	// Unique identifier of keyboard
-	CallbackId string   `json:"callback_id"`
-	Payload    Keyboard `json:"payload"`
+	//CallbackId string   `json:"callback_id"`
+	Payload Keyboard `json:"payload"`
 }
 
 // Request to attach keyboard to message
@@ -316,6 +316,15 @@ type InlineKeyboardAttachmentRequestPayload struct {
 	Buttons [][]Button `json:"buttons"`
 }
 
+type ButtonType string
+
+const (
+	LINK        ButtonType = "link"
+	CALLBACK    ButtonType = "callback"
+	CONTACT     ButtonType = "request_contact"
+	GEOLOCATION ButtonType = "request_geo_location"
+)
+
 // Intent : Intent of button
 type Intent string
 
@@ -328,12 +337,12 @@ const (
 
 // Keyboard is two-dimension array of buttons
 type Keyboard struct {
-	Buttons [][]Button `json:"buttons"`
+	Buttons interface{} `json:"buttons"`
 }
 
 // After pressing this type of button user follows the link it contains
 type LinkButton struct {
-	Type string `json:"type,omitempty"`
+	Type ButtonType `json:"type,omitempty"`
 	// Visible text of button
 	Text string `json:"text"`
 	// Intent of button. Affects clients representation.
@@ -516,7 +525,7 @@ type Recipient struct {
 
 // After pressing this type of button client sends new message with attachment of curent user contact
 type RequestContactButton struct {
-	Type string `json:"type,omitempty"`
+	Type ButtonType `json:"type,omitempty"`
 	// Visible text of button
 	Text string `json:"text"`
 	// Intent of button. Affects clients representation.
@@ -525,7 +534,7 @@ type RequestContactButton struct {
 
 // After pressing this type of button client sends new message with attachment of current user geo location
 type RequestGeoLocationButton struct {
-	Type string `json:"type,omitempty"`
+	Type ButtonType `json:"type,omitempty"`
 	// Visible text of button
 	Text string `json:"text"`
 	// Intent of button. Affects clients representation.

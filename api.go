@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -22,6 +23,7 @@ type Api struct {
 	url     *url.URL
 	timeout int
 	pause   int
+	logging bool
 }
 
 // New TamTam Api object
@@ -33,7 +35,12 @@ func New(key string) *Api {
 		version: "1.0.3",
 		timeout: 30,
 		pause:   1,
+		logging: false,
 	}
+}
+
+func (a *Api) EnableLogging() {
+	a.logging = true
 }
 
 // region Misc methods
@@ -464,7 +471,11 @@ func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (
 		return result, err
 	}
 	defer body.Close()
-	return result, json.NewDecoder(body).Decode(result)
+	jb, _ := ioutil.ReadAll(body)
+	if a.logging {
+		log.Printf("Received: %s", string(jb))
+	}
+	return result, json.Unmarshal(jb, result)
 }
 
 func (a *Api) request(method, path string, query url.Values, body interface{}) (io.ReadCloser, error) {
@@ -477,6 +488,9 @@ func (a *Api) request(method, path string, query url.Values, body interface{}) (
 	j, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
+	}
+	if a.logging {
+		log.Printf("Sent: [%s %s] Query: %#v  Body: %s", method, path, query, string(j))
 	}
 	req, err := http.NewRequest(method, u.String(), bytes.NewReader(j))
 	if err != nil {
