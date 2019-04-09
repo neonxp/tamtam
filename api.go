@@ -222,7 +222,7 @@ func (a *Api) SendAction(chatID int64, action SenderAction) (*SimpleQueryResult,
 func (a *Api) GetMessages(chatID int64, messageIDs []string, from int64, to int64, count int64) (*MessageList, error) {
 	result := new(MessageList)
 	values := url.Values{}
-	if chatID > 0 {
+	if chatID != 0 {
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
@@ -230,11 +230,11 @@ func (a *Api) GetMessages(chatID int64, messageIDs []string, from int64, to int6
 			values.Add("message_ids", mid)
 		}
 	}
-	if from > 0 {
+	if from != 0 {
 		values.Set("from", strconv.Itoa(int(from)))
 	}
-	if to > 0 {
-		values.Set("count", strconv.Itoa(int(to)))
+	if to != 0 {
+		values.Set("to", strconv.Itoa(int(to)))
 	}
 	if count > 0 {
 		values.Set("count", strconv.Itoa(int(count)))
@@ -250,10 +250,10 @@ func (a *Api) GetMessages(chatID int64, messageIDs []string, from int64, to int6
 func (a *Api) SendMessage(chatID int64, userID int64, message *NewMessageBody) (*Message, error) {
 	result := new(Message)
 	values := url.Values{}
-	if chatID > 0 {
+	if chatID != 0 {
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
 	}
-	if userID > 0 {
+	if userID != 0 {
 		values.Set("user_id", strconv.Itoa(int(userID)))
 	}
 	body, err := a.request(http.MethodPost, "messages", values, message)
