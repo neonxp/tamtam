@@ -482,10 +482,10 @@ type PhotoAttachment struct {
 
 type PhotoAttachmentPayload struct {
 	// Unique identifier of this image
-	PhotoId int64  `json:"photo_id"`
-	Token   string `json:"token"`
+	PhotoId *int64  `json:"photo_id,omitempty"`
+	Token   *string `json:"token,omitempty"`
 	// Image URL
-	Url string `json:"url"`
+	Url *string `json:"url,omitempty"`
 }
 
 type PhotoAttachmentRequest struct {

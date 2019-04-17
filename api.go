@@ -11,8 +11,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 )
@@ -66,6 +68,48 @@ func (a *Api) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 	}
 	defer body.Close()
 	return result, json.NewDecoder(body).Decode(result)
+}
+
+func (a *Api) UploadMedia(uploadType UploadType, filename string) (*UploadedInfo, error) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("data", filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// open file handle
+	fh, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fh.Close()
+
+	//iocopy
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bodyWriter.Close(); err != nil {
+		return nil, err
+	}
+
+	target, err := a.GetUploadURL(uploadType)
+	if err != nil {
+		return nil, err
+	}
+	contentType := bodyWriter.FormDataContentType()
+
+	resp, err := http.Post(target.Url, contentType, bodyBuf)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	result := new(UploadedInfo)
+	return result, json.NewDecoder(resp.Body).Decode(result)
 }
 
 func (a *Api) GetUpdatesLoop(ctx context.Context, updates chan interface{}) error {
@@ -479,20 +523,24 @@ func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (
 }
 
 func (a *Api) request(method, path string, query url.Values, body interface{}) (io.ReadCloser, error) {
+	j, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	return a.requestReader(method, path, query, bytes.NewReader(j))
+}
+
+func (a *Api) requestReader(method, path string, query url.Values, body io.Reader) (io.ReadCloser, error) {
 	c := http.DefaultClient
 	u := *a.url
 	u.Path = path
 	query.Set("access_token", a.key)
 	query.Set("v", a.version)
 	u.RawQuery = query.Encode()
-	j, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
 	if a.logging {
-		log.Printf("Sent: [%s %s] Query: %#v  Body: %s", method, path, query, string(j))
+		log.Printf("Sent: [%s %s] Query: %#v", method, path, query)
 	}
-	req, err := http.NewRequest(method, u.String(), bytes.NewReader(j))
+	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
