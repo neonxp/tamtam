@@ -34,7 +34,7 @@ func New(key string) *Api {
 	return &Api{
 		key:     key,
 		url:     u,
-		version: "1.0.3",
+		version: "0.1.8",
 		timeout: 30,
 		pause:   1,
 		logging: false,

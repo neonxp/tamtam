@@ -30,7 +30,7 @@ type Attachment struct {
 
 type AttachmentPayload struct {
 	// Media attachment URL
-	Url string `json:"url"`
+	Token string `json:"token"`
 }
 
 // Request to attach some data to message
@@ -275,8 +275,10 @@ type Error struct {
 }
 
 type FileAttachment struct {
-	Type    string            `json:"type,omitempty"`
-	Payload AttachmentPayload `json:"payload"`
+	Type     string            `json:"type,omitempty"`
+	Payload  AttachmentPayload `json:"payload"`
+	Filename string            `json:"filename"`
+	Size     int64             `json:"size"`
 }
 
 // Request to attach file to message. MUST be the only attachment in message
@@ -354,9 +356,9 @@ type LinkedMessage struct {
 	// Type of linked message
 	Type MessageLinkType `json:"type"`
 	// User sent this message
-	Sender User `json:"sender"`
+	Sender *User `json:"sender,omitempty"`
 	// Chat where message was originally posted
-	ChatId  int64       `json:"chat_id"`
+	ChatId  *int64      `json:"chat_id,omitempty"`
 	Message MessageBody `json:"message"`
 }
 
@@ -376,7 +378,7 @@ type LocationAttachmentRequest struct {
 // Message in chat
 type Message struct {
 	// User that sent this message
-	Sender User `json:"sender"`
+	Sender *User `json:"sender,omitempty"`
 	// Message recipient. Could be user or chat
 	Recipient Recipient `json:"recipient"`
 	// Unix-time when message was created
@@ -397,7 +399,8 @@ type MessageBody struct {
 	Text string `json:"text"`
 	// Message attachments. Could be one of `Attachment` type. See description of this schema
 	RawAttachments []json.RawMessage `json:"attachments"`
-	Attachments    []interface{}
+
+	Attachments []interface{}
 	// In case this message is repled to, it is the unique identifier of the replied message
 	ReplyTo string `json:"reply_to,omitempty"`
 }
@@ -466,8 +469,6 @@ type MessageRestoredUpdate struct {
 type NewMessageBody struct {
 	// Message text
 	Text string `json:"text"`
-	// Single message attachment.
-	Attachment interface{} `json:"attachment,omitempty"`
 	// Message attachments. See `AttachmentRequest` and it's inheritors for full information.
 	Attachments []interface{} `json:"attachments,omitempty"`
 	// If false, chat participants wouldn't be notified
@@ -568,12 +569,15 @@ type ShareAttachment struct {
 // Simple response to request
 type SimpleQueryResult struct {
 	// `true` if request was successful. `false` otherwise
-	Success bool `json:"success"`
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
 }
 
 type StickerAttachment struct {
 	Type    string            `json:"type,omitempty"`
 	Payload AttachmentPayload `json:"payload"`
+	Width   int               `json:"width"`
+	Height  int               `json:"height"`
 }
 
 // Request to attach sticker. MUST be the only attachment request in message
@@ -660,39 +664,39 @@ type UpdateMessageRemoved struct {
 type UpdateBotAdded struct {
 	Update
 	ChatID int64 `json:"chat_id"`
-	UserID int64 `json:"user_id"`
+	User   User  `json:"user"`
 }
 
 type UpdateBotRemoved struct {
 	Update
 	ChatID int64 `json:"chat_id"`
-	UserID int64 `json:"user_id"`
+	User   User  `json:"user"`
 }
 
 type UpdateBotStarted struct {
 	Update
 	ChatID int64 `json:"chat_id"`
-	UserID int64 `json:"user_id"`
+	User   User  `json:"user"`
 }
 
 type UpdateChatTitleChanged struct {
 	Update
 	ChatID int64  `json:"chat_id"`
-	UserID int64  `json:"user_id"`
+	User   User   `json:"user"`
 	Title  string `json:"title"`
 }
 
 type UpdateUserAdded struct {
 	Update
 	ChatID    int64 `json:"chat_id"`
-	UserID    int64 `json:"user_id"`
+	User      User  `json:"user"`
 	InviterID int64 `json:"inviter_id"`
 }
 
 type UpdateUserRemoved struct {
 	Update
 	ChatID  int64 `json:"chat_id"`
-	UserID  int64 `json:"user_id"`
+	User    User  `json:"user"`
 	AdminID int64 `json:"admin_id"`
 }
 
@@ -779,9 +783,9 @@ type UserWithPhoto struct {
 	// Unique public user name. Can be `null` if user is not accessible or it is not set
 	Username string `json:"username"`
 	// URL of avatar
-	AvatarUrl string `json:"avatar_url"`
+	AvatarUrl *string `json:"avatar_url,omitempty"`
 	// URL of avatar of a bigger size
-	FullAvatarUrl string `json:"full_avatar_url"`
+	FullAvatarUrl *string `json:"full_avatar_url,omitempty"`
 }
 
 type VideoAttachment struct {
