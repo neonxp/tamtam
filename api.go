@@ -1,5 +1,5 @@
-// Package tamtam implements TamTam Bot API
-// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
+//Package tamtam implements TamTam Bot API
+//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 import (
@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+//Api implements main part of TamTam API
 type Api struct {
 	Bots          *bots
 	Chats         *chats
@@ -194,10 +195,12 @@ func (a *Api) UpdatesLoop(ctx context.Context) error {
 	}
 }
 
+//GetUpdates returns updates channel
 func (a *Api) GetUpdates() chan UpdateInterface {
 	return a.updates
 }
 
+//GetHandler returns http handler for webhooks
 func (a *Api) GetHandler(updates chan interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {

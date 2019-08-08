@@ -1,17 +1,20 @@
-// Package tamtam implements TamTam Bot API
-// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
+//Package tamtam implements TamTam Bot API
+//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
+//KeyboardBuilder implements builder for inline keyboard
 type KeyboardBuilder struct {
 	rows []*KeyboardRow
 }
 
+//AddRow adds row to inline keyboard
 func (k *KeyboardBuilder) AddRow() *KeyboardRow {
 	kr := &KeyboardRow{}
 	k.rows = append(k.rows, kr)
 	return kr
 }
 
+//Build returns result keyboard
 func (k *KeyboardBuilder) Build() Keyboard {
 	buttons := make([][]ButtonInterface, 0, len(k.rows))
 	for _, r := range k.rows {
@@ -20,14 +23,17 @@ func (k *KeyboardBuilder) Build() Keyboard {
 	return Keyboard{Buttons: buttons}
 }
 
+//KeyboardRow represents buttons row
 type KeyboardRow struct {
 	cols []ButtonInterface
 }
 
+//Build returns result keyboard row
 func (k *KeyboardRow) Build() []ButtonInterface {
 	return k.cols
 }
 
+//AddLink button
 func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardRow {
 	b := LinkButton{
 		Url: url,
@@ -40,6 +46,7 @@ func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardR
 	return k
 }
 
+//AddCallback button
 func (k *KeyboardRow) AddCallback(text string, intent Intent, payload string) *KeyboardRow {
 	b := CallbackButton{
 		Payload: payload,
@@ -53,6 +60,7 @@ func (k *KeyboardRow) AddCallback(text string, intent Intent, payload string) *K
 	return k
 }
 
+//AddContact button
 func (k *KeyboardRow) AddContact(text string) *KeyboardRow {
 	b := RequestContactButton{
 		Button: Button{
@@ -64,6 +72,7 @@ func (k *KeyboardRow) AddContact(text string) *KeyboardRow {
 	return k
 }
 
+//AddGeolocation button
 func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow {
 	b := RequestGeoLocationButton{
 		Quick: quick,

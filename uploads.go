@@ -1,5 +1,5 @@
-// Package tamtam implements TamTam Bot API
-// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
+//Package tamtam implements TamTam Bot API
+//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 import (
@@ -21,6 +21,7 @@ func newUploads(client *client) *uploads {
 	return &uploads{client: client}
 }
 
+//GetUploadURL returns url to upload files
 func (a *uploads) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 	result := new(UploadEndpoint)
 	values := url.Values{}
@@ -37,6 +38,7 @@ func (a *uploads) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//UploadMedia uploads file to TamTam server
 func (a *uploads) UploadMedia(uploadType UploadType, filename string) (*UploadedInfo, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)

@@ -1,5 +1,5 @@
-// Package tamtam implements TamTam Bot API
-// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
+//Package tamtam implements TamTam Bot API
+//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 import (
@@ -16,6 +16,8 @@ type subscriptions struct {
 func newSubscriptions(client *client) *subscriptions {
 	return &subscriptions{client: client}
 }
+
+//GetSubscriptions returns list of all subscriptions
 func (a *subscriptions) GetSubscriptions() (*GetSubscriptionsResult, error) {
 	result := new(GetSubscriptionsResult)
 	values := url.Values{}
@@ -31,6 +33,7 @@ func (a *subscriptions) GetSubscriptions() (*GetSubscriptionsResult, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//Subscribe subscribes bot to receive updates via WebHook
 func (a *subscriptions) Subscribe(subscribeURL string, updateTypes []string) (*SimpleQueryResult, error) {
 	subscription := &SubscriptionRequestBody{
 		Url:         subscribeURL,
@@ -51,6 +54,7 @@ func (a *subscriptions) Subscribe(subscribeURL string, updateTypes []string) (*S
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//Unsubscribe unsubscribes bot from receiving updates via WebHook
 func (a *subscriptions) Unsubscribe(subscriptionURL string) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}

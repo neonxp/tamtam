@@ -1,5 +1,5 @@
-// Package tamtam implements TamTam Bot API
-// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
+//Package tamtam implements TamTam Bot API
+//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 import (
@@ -19,6 +19,7 @@ func newChats(client *client) *chats {
 	return &chats{client: client}
 }
 
+//GetChats returns information about chats that bot participated in: a result list and marker points to the next page
 func (a *chats) GetChats(count, marker int) (*ChatList, error) {
 	result := new(ChatList)
 	values := url.Values{}
@@ -40,6 +41,7 @@ func (a *chats) GetChats(count, marker int) (*ChatList, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//GetChat returns info about chat
 func (a *chats) GetChat(chatID int) (*Chat, error) {
 	result := new(Chat)
 	values := url.Values{}
@@ -55,6 +57,7 @@ func (a *chats) GetChat(chatID int) (*Chat, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//GetChatMembership returns chat membership info for current bot
 func (a *chats) GetChatMembership(chatID int) (*ChatMember, error) {
 	result := new(ChatMember)
 	values := url.Values{}
@@ -70,6 +73,7 @@ func (a *chats) GetChatMembership(chatID int) (*ChatMember, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//GetChatMembers returns users participated in chat
 func (a *chats) GetChatMembers(chatID, count, marker int) (*ChatMembersList, error) {
 	result := new(ChatMembersList)
 	values := url.Values{}
@@ -91,6 +95,7 @@ func (a *chats) GetChatMembers(chatID, count, marker int) (*ChatMembersList, err
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//LeaveChat removes bot from chat members
 func (a *chats) LeaveChat(chatID int) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}
@@ -106,6 +111,7 @@ func (a *chats) LeaveChat(chatID int) (*SimpleQueryResult, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//EditChat edits chat info: title, icon, etc…
 func (a *chats) EditChat(chatID int, update *ChatPatch) (*Chat, error) {
 	result := new(Chat)
 	values := url.Values{}
@@ -121,6 +127,7 @@ func (a *chats) EditChat(chatID int, update *ChatPatch) (*Chat, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//AddMember adds members to chat. Additional permissions may require.
 func (a *chats) AddMember(chatID int, users UserIdsList) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}
@@ -136,6 +143,7 @@ func (a *chats) AddMember(chatID int, users UserIdsList) (*SimpleQueryResult, er
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//RemoveMember removes member from chat. Additional permissions may require.
 func (a *chats) RemoveMember(chatID int, userID int) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}
@@ -152,6 +160,7 @@ func (a *chats) RemoveMember(chatID int, userID int) (*SimpleQueryResult, error)
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+//SendAction send bot action to chat
 func (a *chats) SendAction(chatID int, action SenderAction) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}
