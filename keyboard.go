@@ -1,13 +1,9 @@
+// Package tamtam implements TamTam Bot API
+// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 type KeyboardBuilder struct {
 	rows []*KeyboardRow
-}
-
-func NewKeyboardBuilder() *KeyboardBuilder {
-	return &KeyboardBuilder{
-		rows: make([]*KeyboardRow, 0),
-	}
 }
 
 func (k *KeyboardBuilder) AddRow() *KeyboardRow {
@@ -17,7 +13,7 @@ func (k *KeyboardBuilder) AddRow() *KeyboardRow {
 }
 
 func (k *KeyboardBuilder) Build() Keyboard {
-	buttons := make([][]interface{}, 0, len(k.rows))
+	buttons := make([][]ButtonInterface, 0, len(k.rows))
 	for _, r := range k.rows {
 		buttons = append(buttons, r.Build())
 	}
@@ -25,19 +21,20 @@ func (k *KeyboardBuilder) Build() Keyboard {
 }
 
 type KeyboardRow struct {
-	cols []interface{}
+	cols []ButtonInterface
 }
 
-func (k *KeyboardRow) Build() []interface{} {
+func (k *KeyboardRow) Build() []ButtonInterface {
 	return k.cols
 }
 
 func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardRow {
 	b := LinkButton{
-		Text:   text,
-		Url:    url,
-		Intent: intent,
-		Type:   LINK,
+		Url: url,
+		Button: Button{
+			Text: text,
+			Type: LINK,
+		},
 	}
 	k.cols = append(k.cols, b)
 	return k
@@ -45,31 +42,35 @@ func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardR
 
 func (k *KeyboardRow) AddCallback(text string, intent Intent, payload string) *KeyboardRow {
 	b := CallbackButton{
-		Text:    text,
 		Payload: payload,
 		Intent:  intent,
-		Type:    CALLBACK,
+		Button: Button{
+			Text: text,
+			Type: CALLBACK,
+		},
 	}
 	k.cols = append(k.cols, b)
 	return k
 }
 
-func (k *KeyboardRow) AddContact(text string, intent Intent, url string) *KeyboardRow {
+func (k *KeyboardRow) AddContact(text string) *KeyboardRow {
 	b := RequestContactButton{
-		Text:   text,
-		Intent: intent,
-		Type:   CONTACT,
+		Button: Button{
+			Text: text,
+			Type: CONTACT,
+		},
 	}
 	k.cols = append(k.cols, b)
 	return k
 }
 
-func (k *KeyboardRow) AddGeolocation(text string, intent Intent, quick bool) *KeyboardRow {
+func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow {
 	b := RequestGeoLocationButton{
-		Text:   text,
-		Quick:  quick,
-		Intent: intent,
-		Type:   GEOLOCATION,
+		Quick: quick,
+		Button: Button{
+			Text: text,
+			Type: GEOLOCATION,
+		},
 	}
 	k.cols = append(k.cols, b)
 	return k

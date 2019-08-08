@@ -1,9 +1,11 @@
-/*
- * TamTam Bot API
- */
+// Package tamtam implements TamTam Bot API
+// Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ActionRequestBody struct {
 	Action SenderAction `json:"action"`
@@ -25,128 +27,115 @@ const (
 
 // Generic schema representing message attachment
 type Attachment struct {
-	Type AttachmentType `json:"type,omitempty"`
+	Type AttachmentType `json:"type"`
+}
+
+func (a Attachment) GetAttachmentType() AttachmentType {
+	return a.Type
+}
+
+type AttachmentInterface interface {
+	GetAttachmentType() AttachmentType
 }
 
 type AttachmentPayload struct {
 	// Media attachment URL
-	Token string `json:"token"`
+	Url string `json:"url"`
 }
 
 // Request to attach some data to message
 type AttachmentRequest struct {
-	Type string `json:"type,omitempty"`
+	Type AttachmentType `json:"type"`
 }
 
 type AudioAttachment struct {
-	Type    string            `json:"type,omitempty"`
-	Payload AttachmentPayload `json:"payload"`
+	Attachment
+	Payload MediaAttachmentPayload `json:"payload"`
 }
 
 // Request to attach audio to message. MUST be the only attachment in message
 type AudioAttachmentRequest struct {
-	Type    string       `json:"type,omitempty"`
+	AttachmentRequest
 	Payload UploadedInfo `json:"payload"`
 }
 
-// You will receive this update when bot has been added to chat
-type BotAddedToChatUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Chat id where bot was added
-	ChatId int64 `json:"chat_id"`
-	// User id who added bot to chat
-	UserId int64 `json:"user_id"`
+func NewAudioAttachmentRequest(payload UploadedInfo) *AudioAttachmentRequest {
+	return &AudioAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentAudio}}
 }
 
-// You will receive this update when bot has been removed from chat
-type BotRemovedFromChatUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Chat identifier bot removed from
-	ChatId int64 `json:"chat_id"`
-	// User id who removed bot from chat
-	UserId int64 `json:"user_id"`
+type BotCommand struct {
+	Name        string `json:"name"`                  // Command name
+	Description string `json:"description,omitempty"` // Optional command description
 }
 
-// Bot gets this type of update as soon as user pressed `Start` button
-type BotStartedUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Dialog identifier where event has occurred
-	ChatId int64 `json:"chat_id"`
-	// User pressed the 'Start' button
-	UserId int64 `json:"user_id"`
+type BotInfo struct {
+	UserId        int          `json:"user_id"`                   // Users identifier
+	Name          string       `json:"name"`                      // Users visible name
+	Username      string       `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
+	AvatarUrl     string       `json:"avatar_url,omitempty"`      // URL of avatar
+	FullAvatarUrl string       `json:"full_avatar_url,omitempty"` // URL of avatar of a bigger size
+	Commands      []BotCommand `json:"commands,omitempty"`        // Commands supported by bots
+	Description   string       `json:"description,omitempty"`     // Bot description
+}
+
+type BotPatch struct {
+	Name        string                         `json:"name,omitempty"`        // Visible name of bots
+	Username    string                         `json:"username,omitempty"`    // Bot unique identifier. It can be any string 4-64 characters long containing any digit, letter or special symbols: \"-\" or \"_\". It **must** starts with a letter
+	Description string                         `json:"description,omitempty"` // Bot description up to 16k characters long
+	Commands    []BotCommand                   `json:"commands,omitempty"`    // Commands supported by bots. Pass empty list if you want to remove commands
+	Photo       *PhotoAttachmentRequestPayload `json:"photo,omitempty"`       // Request to set bots photo
 }
 
 type Button struct {
-	Type string `json:"type,omitempty"`
-	// Visible text of button
-	Text string `json:"text"`
-	// Intent of button. Affects clients representation.
-	Intent Intent `json:"intent"`
+	Type ButtonType `json:"type"`
+	Text string     `json:"text"` // Visible text of button
 }
 
-// Object sent to bot when user presses button
-type Callback struct {
-	// Unix-time when user pressed the button
-	Timestamp int64 `json:"timestamp"`
-	// Current keyboard identifier
-	CallbackId string `json:"callback_id"`
-	// Button payload
-	Payload string `json:"payload"`
-	// User pressed the button
-	User User `json:"user"`
+func (b Button) GetType() ButtonType {
+	return b.Type
 }
 
-// Send this object when your bot wants to react to when a button is pressed
+func (b Button) GetText() string {
+	return b.Text
+}
+
+type ButtonInterface interface {
+	GetType() ButtonType
+	GetText() string
+}
+
+// Send this object when your bots wants to react to when a button is pressed
 type CallbackAnswer struct {
-	UserId int64 `json:"user_id,omitempty"`
-	// Fill this if you want to modify current message
-	Message NewMessageBody `json:"message,omitempty"`
-	// Fill this if you just want to send one-time notification to user
-	Notification string `json:"notification,omitempty"`
+	UserId       int             `json:"user_id,omitempty"`
+	Message      *NewMessageBody `json:"message,omitempty"`      // Fill this if you want to modify current message
+	Notification string          `json:"notification,omitempty"` // Fill this if you just want to send one-time notification to user
 }
 
 // After pressing this type of button client sends to server payload it contains
 type CallbackButton struct {
-	Type ButtonType `json:"type,omitempty"`
-	// Visible text of button
-	Text string `json:"text"`
-	// Intent of button. Affects clients representation.
-	Intent Intent `json:"intent"`
-	// Button payload
-	Payload string `json:"payload"`
+	Button
+	Payload string `json:"payload"`          // Button payload
+	Intent  Intent `json:"intent,omitempty"` // Intent of button. Affects clients representation
+}
+
+type CallbackButtonAllOf struct {
+	Payload string `json:"payload"`          // Button payload
+	Intent  Intent `json:"intent,omitempty"` // Intent of button. Affects clients representation
 }
 
 type Chat struct {
-	// Chats identifier
-	ChatId int64 `json:"chat_id"`
-	// Type of chat. One of: dialog, chat, channel
-	Type ChatType `json:"type"`
-	// Chat status. One of:  - active: bot is active member of chat  - removed: bot was kicked  - left: bot intentionally left chat  - closed: chat was closed
-	Status ChatStatus `json:"status"`
-	// Visible title of chat
-	Title string `json:"title"`
-	// Icon of chat
-	Icon Image `json:"icon"`
-	// Time of last event occured in chat
-	LastEventTime int64 `json:"last_event_time"`
-	// Number of people in chat. Always 2 for `dialog` chat type
-	ParticipantsCount int32 `json:"participants_count"`
-	// Identifier of chat owner. Visible only for chat admins
-	OwnerId int64 `json:"owner_id,omitempty"`
-	// Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only
-	Participants map[string]int64 `json:"participants,omitempty"`
-	// Is current chat publicly available. Always `false` for dialogs
-	IsPublic bool `json:"is_public"`
-	// Link on chat if it is public
-	Link string `json:"link,omitempty"`
-	// Chat description
-	Description map[string]interface{} `json:"description"`
+	ChatId            int                     `json:"chat_id"`                // Chats identifier
+	Type              ChatType                `json:"type"`                   // Type of chat. One of: dialog, chat, channel
+	Status            ChatStatus              `json:"status"`                 // Chat status. One of:  - active: bots is active member of chat  - removed: bots was kicked  - left: bots intentionally left chat  - closed: chat was closed
+	Title             string                  `json:"title,omitempty"`        // Visible title of chat. Can be null for dialogs
+	Icon              *Image                  `json:"icon"`                   // Icon of chat
+	LastEventTime     int                     `json:"last_event_time"`        // Time of last event occurred in chat
+	ParticipantsCount int                     `json:"participants_count"`     // Number of people in chat. Always 2 for `dialog` chat type
+	OwnerId           int                     `json:"owner_id,omitempty"`     // Identifier of chat owner. Visible only for chat admins
+	Participants      *map[string]int         `json:"participants,omitempty"` // Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only
+	IsPublic          bool                    `json:"is_public"`              // Is current chat publicly available. Always `false` for dialogs
+	Link              string                  `json:"link,omitempty"`         // Link on chat if it is public
+	Description       *map[string]interface{} `json:"description"`            // Chat description
 }
 
 // ChatAdminPermission : Chat admin permissions
@@ -163,44 +152,34 @@ const (
 )
 
 type ChatList struct {
-	// List of requested chats
-	Chats []Chat `json:"chats"`
-	// Reference to the next page of requested chats
-	Marker int64 `json:"marker"`
+	Chats  []Chat `json:"chats"`  // List of requested chats
+	Marker *int   `json:"marker"` // Reference to the next page of requested chats
 }
 
 type ChatMember struct {
-	// Users identifier
-	UserId int64 `json:"user_id"`
-	// Users visible name
-	Name string `json:"name"`
-	// Unique public user name. Can be `null` if user is not accessible or it is not set
-	Username string `json:"username"`
-	// URL of avatar
-	AvatarUrl string `json:"avatar_url"`
-	// URL of avatar of a bigger size
-	FullAvatarUrl  string `json:"full_avatar_url"`
-	LastAccessTime int64  `json:"last_access_time"`
-	IsOwner        bool   `json:"is_owner"`
-	IsAdmin        bool   `json:"is_admin"`
-	JoinTime       int64  `json:"join_time"`
-	// Permissions in chat if member is admin. `null` otherwise
-	Permissions []ChatAdminPermission `json:"permissions"`
+	UserId         int                   `json:"user_id"`                   // Users identifier
+	Name           string                `json:"name"`                      // Users visible name
+	Username       string                `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
+	AvatarUrl      string                `json:"avatar_url,omitempty"`      // URL of avatar
+	FullAvatarUrl  string                `json:"full_avatar_url,omitempty"` // URL of avatar of a bigger size
+	LastAccessTime int                   `json:"last_access_time"`
+	IsOwner        bool                  `json:"is_owner"`
+	IsAdmin        bool                  `json:"is_admin"`
+	JoinTime       int                   `json:"join_time"`
+	Permissions    []ChatAdminPermission `json:"permissions,omitempty"` // Permissions in chat if member is admin. `null` otherwise
 }
 
 type ChatMembersList struct {
-	// Participants in chat with time of last activity. Visible only for chat admins
-	Members []ChatMember `json:"members"`
-	// Pointer to the next data page
-	Marker int64 `json:"marker"`
+	Members []ChatMember `json:"members"` // Participants in chat with time of last activity. Visible only for chat admins
+	Marker  *int         `json:"marker"`  // Pointer to the next data page
 }
 
 type ChatPatch struct {
-	Icon  PhotoAttachmentRequestPayload `json:"icon,omitempty"`
-	Title string                        `json:"title,omitempty"`
+	Icon  *PhotoAttachmentRequestPayload `json:"icon,omitempty"`
+	Title string                         `json:"title,omitempty"`
 }
 
-// ChatStatus : Chat status for current bot
+// ChatStatus : Chat status for current bots
 type ChatStatus string
 
 // List of ChatStatus
@@ -211,19 +190,6 @@ const (
 	CLOSED    ChatStatus = "closed"
 	SUSPENDED ChatStatus = "suspended"
 )
-
-// Bot gets this type of update as soon as title has been changed in chat
-type ChatTitleChangedUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Chat identifier where event has occurred
-	ChatId int64 `json:"chat_id"`
-	// User who changed title
-	UserId int64 `json:"user_id"`
-	// New title
-	Title string `json:"title"`
-}
 
 // ChatType : Type of chat. Dialog (one-on-one), chat or channel
 type ChatType string
@@ -236,86 +202,86 @@ const (
 )
 
 type ContactAttachment struct {
-	Type    string                   `json:"type,omitempty"`
+	Attachment
 	Payload ContactAttachmentPayload `json:"payload"`
 }
 
 type ContactAttachmentPayload struct {
-	// User info in VCF format
-	VcfInfo string `json:"vcfInfo"`
-	// User info
-	TamInfo User `json:"tamInfo"`
+	VcfInfo string `json:"vcfInfo,omitempty"` // User info in VCF format
+	TamInfo *User  `json:"tamInfo"`           // User info
 }
 
 // Request to attach contact card to message. MUST be the only attachment in message
 type ContactAttachmentRequest struct {
-	Type    string                          `json:"type,omitempty"`
+	AttachmentRequest
 	Payload ContactAttachmentRequestPayload `json:"payload"`
 }
 
+func NewContactAttachmentRequest(payload ContactAttachmentRequestPayload) *ContactAttachmentRequest {
+	return &ContactAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentContact}}
+}
+
 type ContactAttachmentRequestPayload struct {
-	// Contact name
-	Name string `json:"name"`
-	// Contact identifier
-	ContactId int64 `json:"contactId"`
-	// Full information about contact in VCF format
-	VcfInfo string `json:"vcfInfo"`
-	// Contact phone in VCF format
-	VcfPhone string `json:"vcfPhone"`
+	Name      string `json:"name,omitempty"`      // Contact name
+	ContactId int    `json:"contactId,omitempty"` // Contact identifier
+	VcfInfo   string `json:"vcfInfo,omitempty"`   // Full information about contact in VCF format
+	VcfPhone  string `json:"vcfPhone,omitempty"`  // Contact phone in VCF format
 }
 
 // Server returns this if there was an exception to your request
 type Error struct {
-	// Error
-	Error string `json:"error,omitempty"`
-	// Error code
-	Code string `json:"code"`
-	// Human-readable description
-	Message string `json:"message"`
+	Error   string `json:"error,omitempty"` // Error
+	Code    string `json:"code"`            // Error code
+	Message string `json:"message"`         // Human-readable description
 }
 
 type FileAttachment struct {
-	Type     string            `json:"type,omitempty"`
-	Payload  AttachmentPayload `json:"payload"`
-	Filename string            `json:"filename"`
-	Size     int64             `json:"size"`
+	Attachment
+	Payload  FileAttachmentPayload `json:"payload"`
+	Filename string                `json:"filename"` // Uploaded file name
+	Size     int                   `json:"size"`     // File size in bytes
+}
+
+type FileAttachmentPayload struct {
+	Url   string `json:"url"`   // Media attachment URL
+	Token string `json:"token"` // Use `token` in case when you are trying to reuse the same attachment in other message
 }
 
 // Request to attach file to message. MUST be the only attachment in message
 type FileAttachmentRequest struct {
-	Type    string           `json:"type,omitempty"`
-	Payload UploadedFileInfo `json:"payload"`
+	AttachmentRequest
+	Payload UploadedInfo `json:"payload"`
+}
+
+func NewFileAttachmentRequest(payload UploadedInfo) *FileAttachmentRequest {
+	return &FileAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentFile}}
 }
 
 // List of all WebHook subscriptions
 type GetSubscriptionsResult struct {
-	// Current suscriptions
-	Subscriptions []Subscription `json:"subscriptions"`
+	Subscriptions []Subscription `json:"subscriptions"` // Current subscriptions
 }
 
 // Generic schema describing image object
 type Image struct {
-	// URL of image
-	Url string `json:"url"`
+	Url string `json:"url"` // URL of image
 }
 
 // Buttons in messages
 type InlineKeyboardAttachment struct {
-	Type string `json:"type,omitempty"`
-	// Unique identifier of keyboard
-	//CallbackId string   `json:"callback_id"`
-	Payload Keyboard `json:"payload"`
+	Attachment
+	CallbackId string   `json:"callback_id"` // Unique identifier of keyboard
+	Payload    Keyboard `json:"payload"`
 }
 
 // Request to attach keyboard to message
 type InlineKeyboardAttachmentRequest struct {
-	Type    string                                 `json:"type,omitempty"`
-	Payload InlineKeyboardAttachmentRequestPayload `json:"payload"`
+	AttachmentRequest
+	Payload Keyboard `json:"payload"`
 }
 
-type InlineKeyboardAttachmentRequestPayload struct {
-	// Two-dimensional array of buttons
-	Buttons [][]Button `json:"buttons"`
+func NewInlineKeyboardAttachmentRequest(payload Keyboard) *InlineKeyboardAttachmentRequest {
+	return &InlineKeyboardAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentKeyboard}}
 }
 
 type ButtonType string
@@ -339,99 +305,78 @@ const (
 
 // Keyboard is two-dimension array of buttons
 type Keyboard struct {
-	Buttons interface{} `json:"buttons"`
+	Buttons [][]ButtonInterface `json:"buttons"`
 }
 
 // After pressing this type of button user follows the link it contains
 type LinkButton struct {
-	Type ButtonType `json:"type,omitempty"`
-	// Visible text of button
-	Text string `json:"text"`
-	// Intent of button. Affects clients representation.
-	Intent Intent `json:"intent"`
-	Url    string `json:"url"`
+	Button
+	Url string `json:"url"`
 }
 
 type LinkedMessage struct {
-	// Type of linked message
-	Type MessageLinkType `json:"type"`
-	// User sent this message
-	Sender *User `json:"sender,omitempty"`
-	// Chat where message was originally posted
-	ChatId  *int64      `json:"chat_id,omitempty"`
-	Message MessageBody `json:"message"`
+	Type    MessageLinkType `json:"type"`              // Type of linked message
+	Sender  User            `json:"sender,omitempty"`  // User sent this message. Can be `null` if message has been posted on behalf of a channel
+	ChatId  int             `json:"chat_id,omitempty"` // Chat where message has been originally posted. For forwarded messages only
+	Message MessageBody     `json:"message"`
 }
 
 type LocationAttachment struct {
-	Type      string  `json:"type,omitempty"`
+	Attachment
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
 // Request to attach keyboard to message
 type LocationAttachmentRequest struct {
-	Type      string  `json:"type,omitempty"`
+	AttachmentRequest
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
+func NewLocationAttachmentRequest(latitude float64, longitude float64) *LocationAttachmentRequest {
+	return &LocationAttachmentRequest{Latitude: latitude, Longitude: longitude, AttachmentRequest: AttachmentRequest{Type: AttachmentLocation}}
+}
+
+type MediaAttachmentPayload struct {
+	Url   string `json:"url"`   // Media attachment URL
+	Token string `json:"token"` // Use `token` in case when you are trying to reuse the same attachment in other message
+}
+
 // Message in chat
 type Message struct {
-	// User that sent this message
-	Sender *User `json:"sender,omitempty"`
-	// Message recipient. Could be user or chat
-	Recipient Recipient `json:"recipient"`
-	// Unix-time when message was created
-	Timestamp int64 `json:"timestamp"`
-	// Forwarder or replied message
-	Link LinkedMessage `json:"link,omitempty"`
-	// Body of created message. Text + attachments. Could be null if message contains only forwarded message.
-	Body MessageBody `json:"body"`
+	Sender    User           `json:"sender,omitempty"` // User that sent this message. Can be `null` if message has been posted on behalf of a channel
+	Recipient Recipient      `json:"recipient"`        // Message recipient. Could be user or chat
+	Timestamp int            `json:"timestamp"`        // Unix-time when message was created
+	Link      *LinkedMessage `json:"link,omitempty"`   // Forwarder or replied message
+	Body      MessageBody    `json:"body"`             // Body of created message. Text + attachments. Could be null if message contains only forwarded message
+	Stat      *MessageStat   `json:"stat,omitempty"`   // Message statistics. Available only for channels in [GET:/messages](#operation/getMessages) context
 }
 
 // Schema representing body of message
 type MessageBody struct {
-	// Unique identifier of message
-	Mid string `json:"mid"`
-	// Sequence identifier of message in chat
-	Seq int64 `json:"seq"`
-	// Message text
-	Text string `json:"text"`
-	// Message attachments. Could be one of `Attachment` type. See description of this schema
-	RawAttachments []json.RawMessage `json:"attachments"`
-
-	Attachments []interface{}
-	// In case this message is repled to, it is the unique identifier of the replied message
-	ReplyTo string `json:"reply_to,omitempty"`
+	Mid            string            `json:"mid"`            // Unique identifier of message
+	Seq            int               `json:"seq"`            // Sequence identifier of message in chat
+	Text           string            `json:"text,omitempty"` // Message text
+	rawAttachments []json.RawMessage `json:"attachments"`    // Message attachments. Could be one of `Attachment` type. See description of this schema
+	Attachments    []interface{}
+	ReplyTo        string `json:"reply_to,omitempty"` // In case this message is reply to another, it is the unique identifier of the replied message
 }
 
-// You will get this `update` as soon as user presses button
-type MessageCallbackUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64    `json:"timestamp"`
-	Callback  Callback `json:"callback"`
-	// Original message containing inline keyboard. Can be `null` in case it had been deleted by the moment a bot got this update.
-	Message Message `json:"message"`
-}
+type UpdateType string
 
-// You will get this `update` as soon as message is created
-type MessageCreatedUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Newly created message
-	Message Message `json:"message"`
-}
-
-// You will get this `update` as soon as message is edited
-type MessageEditedUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Edited message
-	Message Message `json:"message"`
-}
+const (
+	TypeMessageCallback  UpdateType = "message_callback"
+	TypeMessageCreated              = "message_created"
+	TypeMessageRemoved              = "message_removed"
+	TypeMessageEdited               = "message_edited"
+	TypeBotAdded                    = "bot_added"
+	TypeBotRemoved                  = "bot_removed"
+	TypeUserAdded                   = "user_added"
+	TypeUserRemoved                 = "user_removed"
+	TypeBotStarted                  = "bot_started"
+	TypeChatTitleChanged            = "chat_title_changed"
+)
 
 // MessageLinkType : Type of linked message
 type MessageLinkType string
@@ -444,104 +389,83 @@ const (
 
 // Paginated list of messages
 type MessageList struct {
-	// List of messages
-	Messages []Message `json:"messages"`
+	Messages []Message `json:"messages"` // List of messages
 }
 
-// You will get this `update` as soon as message is removed
-type MessageRemovedUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Identifier of removed message
-	MessageId string `json:"message_id"`
-}
-
-// You will get this `update` as soon as message is restored
-type MessageRestoredUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Restored message identifier
-	MessageId string `json:"message_id"`
+// Message statistics
+type MessageStat struct {
+	Views int `json:"views"`
 }
 
 type NewMessageBody struct {
-	// Message text
-	Text string `json:"text"`
-	// Message attachments. See `AttachmentRequest` and it's inheritors for full information.
-	Attachments []interface{} `json:"attachments,omitempty"`
-	// If false, chat participants wouldn't be notified
-	Notify bool `json:"notify,omitempty"`
+	Text        string          `json:"text,omitempty"`        // Message text
+	Attachments []interface{}   `json:"attachments,omitempty"` // Message attachments. See `AttachmentRequest` and it's inheritors for full information
+	Link        *NewMessageLink `json:"link"`                  // Link to Message
+	Notify      bool            `json:"notify,omitempty"`      // If false, chat participants wouldn't be notified
+}
+
+type NewMessageLink struct {
+	Type MessageLinkType `json:"type"` // Type of message link
+	Mid  string          `json:"mid"`  // Message identifier of original message
 }
 
 // Image attachment
 type PhotoAttachment struct {
-	Type    string                 `json:"type,omitempty"`
+	Attachment
 	Payload PhotoAttachmentPayload `json:"payload"`
 }
 
 type PhotoAttachmentPayload struct {
-	// Unique identifier of this image
-	PhotoId *int64  `json:"photo_id,omitempty"`
-	Token   *string `json:"token,omitempty"`
-	// Image URL
-	Url *string `json:"url,omitempty"`
+	PhotoId int    `json:"photo_id"` // Unique identifier of this image
+	Token   string `json:"token"`
+	Url     string `json:"url"` // Image URL
 }
 
 type PhotoAttachmentRequest struct {
-	Type    string                        `json:"type,omitempty"`
+	AttachmentRequest
 	Payload PhotoAttachmentRequestPayload `json:"payload"`
 }
 
-// Request to attach image. All fields are mutually exclusive.
+func NewPhotoAttachmentRequest(payload PhotoAttachmentRequestPayload) *PhotoAttachmentRequest {
+	return &PhotoAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentImage}}
+}
+
+type PhotoAttachmentRequestAllOf struct {
+	Payload PhotoAttachmentRequestPayload `json:"payload"`
+}
+
+// Request to attach image. All fields are mutually exclusive
 type PhotoAttachmentRequestPayload struct {
-	// If specified, given URL will be attached to message as image
-	Url string `json:"url,omitempty"`
-	// Token of any existing attachment
-	Token string `json:"token,omitempty"`
-	// Tokens were obtained after uploading images
-	Photos map[string]PhotoToken `json:"photos,omitempty"`
+	Url    string                 `json:"url,omitempty"`    // Any external image URL you want to attach
+	Token  string                 `json:"token,omitempty"`  // Token of any existing attachment
+	Photos *map[string]PhotoToken `json:"photos,omitempty"` // Tokens were obtained after uploading images
 }
 
 type PhotoToken struct {
-	// Encoded information of uploaded image
-	Token string `json:"token"`
+	Token string `json:"token"` // Encoded information of uploaded image
 }
 
-// This is information you will recieve as soon as an image uploaded
+// This is information you will receive as soon as an image uploaded
 type PhotoTokens struct {
 	Photos map[string]PhotoToken `json:"photos"`
 }
 
-// New message recepient. Could be user or chat
+// New message recipient. Could be user or chat
 type Recipient struct {
-	// Chat identifier
-	ChatId int64 `json:"chat_id"`
-	// Chat type
-	ChatType ChatType `json:"chat_type"`
-	// User identifier, if message was sent to user
-	UserId int64 `json:"user_id"`
+	ChatId   int      `json:"chat_id,omitempty"` // Chat identifier
+	ChatType ChatType `json:"chat_type"`         // Chat type
+	UserId   int      `json:"user_id,omitempty"` // User identifier, if message was sent to user
 }
 
-// After pressing this type of button client sends new message with attachment of curent user contact
+// After pressing this type of button client sends new message with attachment of current user contact
 type RequestContactButton struct {
-	Type ButtonType `json:"type,omitempty"`
-	// Visible text of button
-	Text string `json:"text"`
-	// Intent of button. Affects clients representation.
-	Intent Intent `json:"intent"`
+	Button
 }
 
 // After pressing this type of button client sends new message with attachment of current user geo location
 type RequestGeoLocationButton struct {
-	Type ButtonType `json:"type,omitempty"`
-	// Visible text of button
-	Text string `json:"text"`
-	// Intent of button. Affects clients representation.
-	Intent Intent `json:"intent"`
-	// If *true*, sends location without asking user's confirmation
-	Quick bool `json:"quick,omitempty"`
+	Button
+	Quick bool `json:"quick,omitempty"` // If *true*, sends location without asking user's confirmation
 }
 
 type SendMessageResult struct {
@@ -562,156 +486,66 @@ const (
 )
 
 type ShareAttachment struct {
-	Type    string            `json:"type,omitempty"`
+	Attachment
 	Payload AttachmentPayload `json:"payload"`
 }
 
 // Simple response to request
 type SimpleQueryResult struct {
-	// `true` if request was successful. `false` otherwise
-	Success bool   `json:"success"`
-	Message string `json:"message,omitempty"`
+	Success bool   `json:"success"`           // `true` if request was successful. `false` otherwise
+	Message string `json:"message,omitempty"` // Explanatory message if the result is not successful
 }
 
 type StickerAttachment struct {
-	Type    string            `json:"type,omitempty"`
-	Payload AttachmentPayload `json:"payload"`
-	Width   int               `json:"width"`
-	Height  int               `json:"height"`
+	Attachment
+	Payload StickerAttachmentPayload `json:"payload"`
+	Width   int                      `json:"width"`  // Sticker width
+	Height  int                      `json:"height"` // Sticker height
+}
+
+type StickerAttachmentPayload struct {
+	Url  string `json:"url"`  // Media attachment URL
+	Code string `json:"code"` // Sticker identifier
 }
 
 // Request to attach sticker. MUST be the only attachment request in message
 type StickerAttachmentRequest struct {
-	Type    string                          `json:"type,omitempty"`
+	AttachmentRequest
 	Payload StickerAttachmentRequestPayload `json:"payload"`
 }
 
+func NewStickerAttachmentRequest(payload StickerAttachmentRequestPayload) *StickerAttachmentRequest {
+	return &StickerAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentSticker}}
+}
+
 type StickerAttachmentRequestPayload struct {
-	// Sticker code
-	Code string `json:"code"`
+	Code string `json:"code"` // Sticker code
 }
 
 // Schema to describe WebHook subscription
 type Subscription struct {
-	// WebHook URL
-	Url string `json:"url"`
-	// Unix-time when subscription was created
-	Time int64 `json:"time"`
-	// Update types bot subscribed for
-	UpdateTypes []string `json:"update_types"`
-	Version     string   `json:"version"`
+	Url         string   `json:"url"`                    // Webhook URL
+	Time        int      `json:"time"`                   // Unix-time when subscription was created
+	UpdateTypes []string `json:"update_types,omitempty"` // Update types bots subscribed for
+	Version     string   `json:"version,omitempty"`
 }
 
 // Request to set up WebHook subscription
 type SubscriptionRequestBody struct {
-	// URL of HTTP(S)-endpoint of your bot
-	Url string `json:"url"`
-	// List of update types your bot want to receive. See `Update` object for a complete list of types
-	UpdateTypes []string `json:"update_types,omitempty"`
-	// Version of API. Affects model representation
-	Version string `json:"version,omitempty"`
+	Url         string   `json:"url"`                    // URL of HTTP(S)-endpoint of your bots. Must starts with http(s)://
+	UpdateTypes []string `json:"update_types,omitempty"` // List of update types your bots want to receive. See `Update` object for a complete list of types
+	Version     string   `json:"version,omitempty"`      // Version of API. Affects model representation
 }
 
-type UpdateType string
-
-const (
-	UpdateTypeMessageCallback  UpdateType = "message_callback"
-	UpdateTypeMessageCreated              = "message_created"
-	UpdateTypeMessageRemoved              = "message_removed"
-	UpdateTypeMessageEdited               = "message_edited"
-	UpdateTypeMessageRestored             = "message_restored"
-	UpdateTypeBotAdded                    = "bot_added"
-	UpdateTypeBotRemoved                  = "bot_removed"
-	UpdateTypeUserAdded                   = "user_added"
-	UpdateTypeUserRemoved                 = "user_removed"
-	UpdateTypeBotStarted                  = "bot_started"
-	UpdateTypeChatTitleChanged            = "chat_title_changed"
-)
-
-// `Update` object repsesents different types of events that happened in chat. See its inheritors
-type Update struct {
-	UpdateType UpdateType `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-}
-
-type UpdateMessageCallback struct {
-	Update
-	Callback Callback `json:"callback"`
-	Message  Message  `json:"message"`
-}
-
-type UpdateMessageCreated struct {
-	Update
-	Message Message `json:"message"`
-}
-
-type UpdateMessageEdited struct {
-	Update
-	Message Message `json:"message"`
-}
-
-type UpdateMessageRestored struct {
-	Update
-	MessageID string `json:"message_id"`
-}
-
-type UpdateMessageRemoved struct {
-	Update
-	MessageID string `json:"message_id"`
-}
-
-type UpdateBotAdded struct {
-	Update
-	ChatID int64 `json:"chat_id"`
-	User   User  `json:"user"`
-}
-
-type UpdateBotRemoved struct {
-	Update
-	ChatID int64 `json:"chat_id"`
-	User   User  `json:"user"`
-}
-
-type UpdateBotStarted struct {
-	Update
-	ChatID int64 `json:"chat_id"`
-	User   User  `json:"user"`
-}
-
-type UpdateChatTitleChanged struct {
-	Update
-	ChatID int64  `json:"chat_id"`
-	User   User   `json:"user"`
-	Title  string `json:"title"`
-}
-
-type UpdateUserAdded struct {
-	Update
-	ChatID    int64 `json:"chat_id"`
-	User      User  `json:"user"`
-	InviterID int64 `json:"inviter_id"`
-}
-
-type UpdateUserRemoved struct {
-	Update
-	ChatID  int64 `json:"chat_id"`
-	User    User  `json:"user"`
-	AdminID int64 `json:"admin_id"`
-}
-
-// List of all updates in chats your bot participated in
+// List of all updates in chats your bots participated in
 type UpdateList struct {
-	// Page of updates
-	Updates []json.RawMessage `json:"updates"`
-	// Pointer to the next data page
-	Marker int64 `json:"marker"`
+	Updates []json.RawMessage `json:"updates"` // Page of updates
+	Marker  *int              `json:"marker"`  // Pointer to the next data page
 }
 
 // Endpoint you should upload to your binaries
 type UploadEndpoint struct {
-	// URL to upload
-	Url string `json:"url"`
+	Url string `json:"url"` // URL to upload
 }
 
 // UploadType : Type of file uploading
@@ -725,76 +559,137 @@ const (
 	FILE  UploadType = "file"
 )
 
-// This is information you will recieve as soon as a file is uploaded
-type UploadedFileInfo struct {
-	// Unique file identifier
-	FileId int64 `json:"fileId"`
-}
-
-// This is information you will recieve as soon as audio/video is uploaded
+// This is information you will receive as soon as audio/video is uploaded
 type UploadedInfo struct {
-	Id int64 `json:"id"`
+	Token string `json:"token,omitempty"` // Token is unique uploaded media identfier
 }
 
 type User struct {
-	// Users identifier
-	UserId int64 `json:"user_id"`
-	// Users visible name
-	Name string `json:"name"`
-	// Unique public user name. Can be `null` if user is not accessible or it is not set
-	Username string `json:"username"`
-}
-
-// You will receive this update when user has been added to chat where bot is administrator
-type UserAddedToChatUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Chat identifier where event has occured
-	ChatId int64 `json:"chat_id"`
-	// User added to chat
-	UserId int64 `json:"user_id"`
-	// User who added user to chat
-	InviterId int64 `json:"inviter_id"`
+	UserId   int    `json:"user_id"`            // Users identifier
+	Name     string `json:"name"`               // Users visible name
+	Username string `json:"username,omitempty"` // Unique public user name. Can be `null` if user is not accessible or it is not set
 }
 
 type UserIdsList struct {
-	UserIds []int64 `json:"user_ids"`
-}
-
-// You will receive this update when user has been removed from chat where bot is administrator
-type UserRemovedFromChatUpdate struct {
-	UpdateType string `json:"update_type,omitempty"`
-	// Unix-time when event has occured
-	Timestamp int64 `json:"timestamp"`
-	// Chat identifier where event has occured
-	ChatId int64 `json:"chat_id"`
-	// User removed from chat
-	UserId int64 `json:"user_id"`
-	// Administrator who removed user from chat
-	AdminId int64 `json:"admin_id"`
+	UserIds []int `json:"user_ids"`
 }
 
 type UserWithPhoto struct {
-	// Users identifier
-	UserId int64 `json:"user_id"`
-	// Users visible name
-	Name string `json:"name"`
-	// Unique public user name. Can be `null` if user is not accessible or it is not set
-	Username string `json:"username"`
-	// URL of avatar
-	AvatarUrl *string `json:"avatar_url,omitempty"`
-	// URL of avatar of a bigger size
-	FullAvatarUrl *string `json:"full_avatar_url,omitempty"`
+	UserId        int    `json:"user_id"`                   // Users identifier
+	Name          string `json:"name"`                      // Users visible name
+	Username      string `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
+	AvatarUrl     string `json:"avatar_url,omitempty"`      // URL of avatar
+	FullAvatarUrl string `json:"full_avatar_url,omitempty"` // URL of avatar of a bigger size
 }
 
 type VideoAttachment struct {
-	Type    string            `json:"type,omitempty"`
-	Payload AttachmentPayload `json:"payload"`
+	Attachment
+	Payload MediaAttachmentPayload `json:"payload"`
 }
 
 // Request to attach video to message
 type VideoAttachmentRequest struct {
-	Type    string       `json:"type,omitempty"`
+	AttachmentRequest
 	Payload UploadedInfo `json:"payload"`
+}
+
+func NewVideoAttachmentRequest(payload UploadedInfo) *VideoAttachmentRequest {
+	return &VideoAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentVideo}}
+}
+
+// `Update` object represents different types of events that happened in chat. See its inheritors
+type Update struct {
+	UpdateType UpdateType `json:"update_type"`
+	Timestamp  int        `json:"timestamp"` // Unix-time when event has occurred
+}
+
+func (u Update) GetUpdateType() UpdateType {
+	return u.UpdateType
+}
+
+func (u Update) GetUpdateTime() time.Time {
+	return time.Unix(int64(u.Timestamp), 0)
+}
+
+type UpdateInterface interface {
+	GetUpdateType() UpdateType
+	GetUpdateTime() time.Time
+}
+
+// You will receive this update when bots has been added to chat
+type BotAddedToChatUpdate struct {
+	Update
+	ChatId int  `json:"chat_id"` // Chat id where bots was added
+	User   User `json:"user"`    // User who added bots to chat
+}
+
+// You will receive this update when bots has been removed from chat
+type BotRemovedFromChatUpdate struct {
+	Update
+	ChatId int  `json:"chat_id"` // Chat identifier bots removed from
+	User   User `json:"user"`    // User who removed bots from chat
+}
+
+// Bot gets this type of update as soon as user pressed `Start` button
+type BotStartedUpdate struct {
+	Update
+	ChatId int  `json:"chat_id"` // Dialog identifier where event has occurred
+	User   User `json:"user"`    // User pressed the 'Start' button
+}
+
+// Object sent to bots when user presses button
+type Callback struct {
+	Timestamp  int    `json:"timestamp"` // Unix-time when event has occurred
+	CallbackID string `json:"callback_id"`
+	Payload    string `json:"payload,omitempty"` // Button payload
+	User       User   `json:"user"`              // User pressed the button
+}
+
+// Bot gets this type of update as soon as title has been changed in chat
+type ChatTitleChangedUpdate struct {
+	Update
+	ChatId int    `json:"chat_id"` // Chat identifier where event has occurred
+	User   User   `json:"user"`    // User who changed title
+	Title  string `json:"title"`   // New title
+}
+
+// You will get this `update` as soon as user presses button
+type MessageCallbackUpdate struct {
+	Update
+	Callback Callback `json:"callback"`
+	Message  *Message `json:"message"` // Original message containing inline keyboard. Can be `null` in case it had been deleted by the moment a bots got this update
+}
+
+// You will get this `update` as soon as message is created
+type MessageCreatedUpdate struct {
+	Update
+	Message Message `json:"message"` // Newly created message
+}
+
+// You will get this `update` as soon as message is edited
+type MessageEditedUpdate struct {
+	Update
+	Message Message `json:"message"` // Edited message
+}
+
+// You will get this `update` as soon as message is removed
+type MessageRemovedUpdate struct {
+	Update
+	MessageId string `json:"message_id"` // Identifier of removed message
+}
+
+// You will receive this update when user has been added to chat where bots is administrator
+type UserAddedToChatUpdate struct {
+	Update
+	ChatId    int  `json:"chat_id"`    // Chat identifier where event has occurred
+	User      User `json:"user"`       // User added to chat
+	InviterId int  `json:"inviter_id"` // User who added user to chat
+}
+
+// You will receive this update when user has been removed from chat where bots is administrator
+type UserRemovedFromChatUpdate struct {
+	Update
+	ChatId  int  `json:"chat_id"`  // Chat identifier where event has occurred
+	User    User `json:"user"`     // User removed from chat
+	AdminId int  `json:"admin_id"` // Administrator who removed user from chat
 }
