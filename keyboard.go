@@ -1,4 +1,3 @@
-//Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
 //KeyboardBuilder implements builder for inline keyboard
