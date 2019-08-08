@@ -1,4 +1,3 @@
-//Package tamtam implements TamTam Bot API
 //Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 

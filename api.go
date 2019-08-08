@@ -1,4 +1,4 @@
-//Package tamtam implements TamTam Bot API
+//Package tamtam implements TamTam Bot API. Official documentation: https://dev.tamtam.chat/
 //Copyright (c) 2019 Alexander Kiryukhin <a.kiryukhin@mail.ru>
 package tamtam
 
