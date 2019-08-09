@@ -11,7 +11,9 @@
 
 ## Документация
 В общем случае, методы повторяют такие из [официальной документации](https://dev.tamtam.chat/)
-Так же добавлены хелпер для создания клавиатуры (`api.Messages.NewKeyboardBuilder()`) и для загрузки вложений (`api.Uploads.UploadMedia(uploadType UploadType, filename string)`). Пример создания клавиатуры см. ниже в примере.
+Так же добавлены хелпер для создания клавиатуры (`api.Messages.NewKeyboardBuilder()`) и для загрузки вложений (`api.Uploads.UploadMedia(uploadType UploadType, filename string)`). 
+
+Пример создания клавиатуры см. ниже в примере.
  
 Остальное описано тут http://godoc.org/github.com/neonxp/tamtam/ и в примерах из директории [examples](https://github.com/neonxp/tamtam/tree/master/examples)
 
