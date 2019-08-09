@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 import (
@@ -32,6 +30,9 @@ func main() {
 				AddLink("Библиотека", tamtam.POSITIVE, "https://github.com/neonxp/tamtam").
 				AddCallback("Колбек 1", tamtam.NEGATIVE, "callback_1").
 				AddCallback("Колбек 2", tamtam.NEGATIVE, "callback_2")
+			keyboard.
+				AddRow().
+				AddCallback("Картинка", tamtam.POSITIVE, "picture")
 
 			// Отправка сообщения с клавиатурой
 			res, err := api.Messages.SendMessage(0, upd.Message.Sender.UserId, &tamtam.NewMessageBody{
@@ -42,10 +43,30 @@ func main() {
 			})
 			log.Printf("Answer: %#v %#v", res, err)
 		case *tamtam.MessageCallbackUpdate:
-			res, err := api.Messages.SendMessage(0, upd.Callback.User.UserId, &tamtam.NewMessageBody{
-				Text: "Callback: " + upd.Callback.Payload,
-			})
+			// Ответ на коллбек
+			attachments := make([]interface{}, 0)
+			if upd.Callback.Payload == "picture" {
+				photo, err := api.Uploads.UploadPhoto("./examples/example.jpg")
+				if err != nil {
+					log.Fatal(err)
+				}
+				attachments = append(attachments, tamtam.NewPhotoAttachmentRequest(tamtam.PhotoAttachmentRequestPayload{Photos: photo.Photos}))
+			}
+			res, err := api.Messages.AnswerOnCallback(
+				upd.Callback.CallbackID,
+				&tamtam.CallbackAnswer{
+					UserId: upd.Callback.User.UserId,
+					Message: &tamtam.NewMessageBody{
+						Text: "OK!",
+					},
+					Notification: "Callback is ok",
+				})
 			log.Printf("Answer: %#v %#v", res, err)
+			res2, err := api.Messages.SendMessage(0, upd.Callback.User.UserId, &tamtam.NewMessageBody{
+				Text:        upd.Callback.Payload + " at " + upd.GetUpdateTime().String(),
+				Attachments: attachments,
+			})
+			log.Printf("Answer: %#v %#v", res2, err)
 		default:
 			log.Printf("Unknown type: %#v", upd)
 		}

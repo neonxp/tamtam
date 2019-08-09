@@ -28,8 +28,9 @@ type Api struct {
 
 // New TamTam Api object
 func New(key string) *Api {
+	timeout := 30
 	u, _ := url.Parse("https://botapi.tamtam.chat/")
-	cl := newClient(key, "0.1.8", u)
+	cl := newClient(key, "0.1.8", u, &http.Client{Timeout: time.Duration(timeout) * time.Second})
 	return &Api{
 		Bots:          newBots(cl),
 		Chats:         newChats(cl),
@@ -38,7 +39,7 @@ func New(key string) *Api {
 		Subscriptions: newSubscriptions(cl),
 		client:        cl,
 		updates:       make(chan UpdateInterface),
-		timeout:       30,
+		timeout:       timeout,
 		pause:         1,
 	}
 }

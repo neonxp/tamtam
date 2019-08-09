@@ -10,13 +10,14 @@ import (
 )
 
 type client struct {
-	key     string
-	version string
-	url     *url.URL
+	key        string
+	version    string
+	url        *url.URL
+	httpClient *http.Client
 }
 
-func newClient(key string, version string, url *url.URL) *client {
-	return &client{key: key, version: version, url: url}
+func newClient(key string, version string, url *url.URL, httpClient *http.Client) *client {
+	return &client{key: key, version: version, url: url, httpClient: httpClient}
 }
 
 func (cl *client) request(method, path string, query url.Values, body interface{}) (io.ReadCloser, error) {
@@ -28,7 +29,6 @@ func (cl *client) request(method, path string, query url.Values, body interface{
 }
 
 func (cl *client) requestReader(method, path string, query url.Values, body io.Reader) (io.ReadCloser, error) {
-	c := http.DefaultClient
 	u := *cl.url
 	u.Path = path
 	query.Set("access_token", cl.key)
@@ -38,7 +38,7 @@ func (cl *client) requestReader(method, path string, query url.Values, body io.R
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.Do(req)
+	resp, err := cl.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

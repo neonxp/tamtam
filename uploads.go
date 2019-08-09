@@ -37,7 +37,48 @@ func (a *uploads) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 }
 
 //UploadMedia uploads file to TamTam server
-func (a *uploads) UploadMedia(uploadType UploadType, filename string) (*UploadedInfo, error) {
+func (a *uploads) UploadMedia(endpoint *UploadEndpoint, filename string) (*UploadedInfo, error) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	fileWriter, err := bodyWriter.CreateFormFile("data", filename)
+	if err != nil {
+		return nil, err
+	}
+
+	fh, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := fh.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bodyWriter.Close(); err != nil {
+		return nil, err
+	}
+	contentType := bodyWriter.FormDataContentType()
+	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	result := new(UploadedInfo)
+	return result, json.NewDecoder(resp.Body).Decode(result)
+}
+
+//UploadPhoto uploads photos to TamTam server
+func (a *uploads) UploadPhoto(filename string) (*PhotoTokens, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -64,13 +105,13 @@ func (a *uploads) UploadMedia(uploadType UploadType, filename string) (*Uploaded
 		return nil, err
 	}
 
-	target, err := a.GetUploadURL(uploadType)
+	endpoint, err := a.GetUploadURL(PHOTO)
 	if err != nil {
 		return nil, err
 	}
 	contentType := bodyWriter.FormDataContentType()
 
-	resp, err := http.Post(target.Url, contentType, bodyBuf)
+	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +120,6 @@ func (a *uploads) UploadMedia(uploadType UploadType, filename string) (*Uploaded
 			log.Println(err)
 		}
 	}()
-	result := new(UploadedInfo)
+	result := new(PhotoTokens)
 	return result, json.NewDecoder(resp.Body).Decode(result)
 }

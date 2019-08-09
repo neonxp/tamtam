@@ -106,10 +106,10 @@ func (a *messages) DeleteMessage(messageID int) (*SimpleQueryResult, error) {
 }
 
 //AnswerOnCallback should be called to send an answer after a user has clicked the button. The answer may be an updated message or/and a one-time user notification.
-func (a *messages) AnswerOnCallback(callbackID int, callback *CallbackAnswer) (*SimpleQueryResult, error) {
+func (a *messages) AnswerOnCallback(callbackID string, callback *CallbackAnswer) (*SimpleQueryResult, error) {
 	result := new(SimpleQueryResult)
 	values := url.Values{}
-	values.Set("callback_id", strconv.Itoa(int(callbackID)))
+	values.Set("callback_id", callbackID)
 	body, err := a.client.request(http.MethodPost, "answers", values, callback)
 	if err != nil {
 		return result, err

@@ -434,9 +434,9 @@ type PhotoAttachmentRequestAllOf struct {
 
 // Request to attach image. All fields are mutually exclusive
 type PhotoAttachmentRequestPayload struct {
-	Url    string                 `json:"url,omitempty"`    // Any external image URL you want to attach
-	Token  string                 `json:"token,omitempty"`  // Token of any existing attachment
-	Photos *map[string]PhotoToken `json:"photos,omitempty"` // Tokens were obtained after uploading images
+	Url    string                `json:"url,omitempty"`    // Any external image URL you want to attach
+	Token  string                `json:"token,omitempty"`  // Token of any existing attachment
+	Photos map[string]PhotoToken `json:"photos,omitempty"` // Tokens were obtained after uploading images
 }
 
 type PhotoToken struct {
@@ -559,7 +559,8 @@ const (
 
 // This is information you will receive as soon as audio/video is uploaded
 type UploadedInfo struct {
-	Token string `json:"token,omitempty"` // Token is unique uploaded media identfier
+	FileID int    `json:"file_id,omitempty"`
+	Token  string `json:"token,omitempty"` // Token is unique uploaded media identfier
 }
 
 type User struct {
@@ -606,7 +607,7 @@ func (u Update) GetUpdateType() UpdateType {
 }
 
 func (u Update) GetUpdateTime() time.Time {
-	return time.Unix(int64(u.Timestamp), 0)
+	return time.Unix(int64(u.Timestamp/1000), 0)
 }
 
 type UpdateInterface interface {
