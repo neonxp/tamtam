@@ -55,7 +55,7 @@ func (a *Api) bytesToProperUpdate(b []byte) UpdateInterface {
 	case TypeMessageCreated:
 		upd := new(MessageCreatedUpdate)
 		_ = json.Unmarshal(b, upd)
-		for _, att := range upd.Message.Body.rawAttachments {
+		for _, att := range upd.Message.Body.RawAttachments {
 			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
 		}
 		return upd
@@ -66,7 +66,7 @@ func (a *Api) bytesToProperUpdate(b []byte) UpdateInterface {
 	case TypeMessageEdited:
 		upd := new(MessageEditedUpdate)
 		_ = json.Unmarshal(b, upd)
-		for _, att := range upd.Message.Body.rawAttachments {
+		for _, att := range upd.Message.Body.RawAttachments {
 			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
 		}
 		return upd

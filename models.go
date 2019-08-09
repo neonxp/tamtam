@@ -356,7 +356,7 @@ type MessageBody struct {
 	Mid            string            `json:"mid"`            // Unique identifier of message
 	Seq            int               `json:"seq"`            // Sequence identifier of message in chat
 	Text           string            `json:"text,omitempty"` // Message text
-	rawAttachments []json.RawMessage `json:"attachments"`    // Message attachments. Could be one of `Attachment` type. See description of this schema
+	RawAttachments []json.RawMessage `json:"attachments"`    // Message attachments. Could be one of `Attachment` type. See description of this schema
 	Attachments    []interface{}
 	ReplyTo        string `json:"reply_to,omitempty"` // In case this message is reply to another, it is the unique identifier of the replied message
 }
