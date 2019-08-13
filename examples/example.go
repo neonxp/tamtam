@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 
 	"github.com/neonxp/tamtam"
 )
@@ -14,8 +15,14 @@ func main() {
 
 	info, err := api.Bots.GetBot() // Простой метод
 	log.Printf("Get me: %#v %#v", info, err)
-	go api.UpdatesLoop(context.Background()) // Запуск цикла получения обновлений
-	for upd := range api.GetUpdates() {      // Чтение из канала с обновлениями
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		exit := make(chan os.Signal)
+		signal.Notify(exit, os.Kill, os.Interrupt)
+		<-exit
+		cancel()
+	}()
+	for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
 		log.Printf("Received: %#v", upd)
 		switch upd := upd.(type) { // Определение типа пришедшего обновления
 		case *tamtam.MessageCreatedUpdate:
