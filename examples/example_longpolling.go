@@ -25,23 +25,17 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		for {
-			select {
-			case upd := <-api.GetUpdates():
-				log.Printf("Received: %#v", upd)
-				switch upd := upd.(type) {
-				case *tamtam.MessageCreatedUpdate:
-					res, err := api.Messages.SendMessage(0, upd.Message.Sender.UserId, &tamtam.NewMessageBody{
-						Text: fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text),
-					})
-					log.Printf("Answer: %#v %#v", res, err)
-				default:
-					log.Printf("Unknown type: %#v", upd)
-				}
-			case <-ctx.Done():
-				return
+		for upd := range api.GetUpdates(ctx) {
+			log.Printf("Received: %#v", upd)
+			switch upd := upd.(type) {
+			case *tamtam.MessageCreatedUpdate:
+				res, err := api.Messages.SendMessage(0, upd.Message.Sender.UserId, &tamtam.NewMessageBody{
+					Text: fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text),
+				})
+				log.Printf("Answer: %#v %#v", res, err)
+			default:
+				log.Printf("Unknown type: %#v", upd)
 			}
-
 		}
 	}()
 	go func() {
@@ -54,9 +48,5 @@ func main() {
 			return
 		}
 	}()
-
-	if err := api.UpdatesLoop(ctx); err != nil {
-		log.Fatalln(err)
-	}
-
+	<-ctx.Done()
 }

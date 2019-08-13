@@ -21,7 +21,6 @@ type Api struct {
 	Subscriptions *subscriptions
 	Uploads       *uploads
 	client        *client
-	updates       chan UpdateInterface
 	timeout       int
 	pause         int
 }
@@ -38,7 +37,6 @@ func New(key string) *Api {
 		Messages:      newMessages(cl),
 		Subscriptions: newSubscriptions(cl),
 		client:        cl,
-		updates:       make(chan UpdateInterface),
 		timeout:       timeout,
 		pause:         1,
 	}
@@ -172,33 +170,35 @@ func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*U
 	return result, json.Unmarshal(jb, result)
 }
 
-func (a *Api) UpdatesLoop(ctx context.Context) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(time.Duration(a.pause) * time.Second):
-			var marker int
-			for {
-				upds, err := a.getUpdates(50, a.timeout, marker, []string{})
-				if err != nil {
-					return err
+//GetUpdates returns updates channel
+func (a *Api) GetUpdates(ctx context.Context) chan UpdateInterface {
+	ch := make(chan UpdateInterface)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				close(ch)
+				return
+			case <-time.After(time.Duration(a.pause) * time.Second):
+				var marker int
+				for {
+					upds, err := a.getUpdates(50, a.timeout, marker, []string{})
+					if err != nil {
+						log.Println(err)
+						break
+					}
+					if len(upds.Updates) == 0 {
+						break
+					}
+					for _, u := range upds.Updates {
+						ch <- a.bytesToProperUpdate(u)
+					}
+					marker = *upds.Marker
 				}
-				if len(upds.Updates) == 0 {
-					break
-				}
-				for _, u := range upds.Updates {
-					a.updates <- a.bytesToProperUpdate(u)
-				}
-				marker = *upds.Marker
 			}
 		}
-	}
-}
-
-//GetUpdates returns updates channel
-func (a *Api) GetUpdates() chan UpdateInterface {
-	return a.updates
+	}()
+	return ch
 }
 
 //GetHandler returns http handler for webhooks

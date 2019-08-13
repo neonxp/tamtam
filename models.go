@@ -365,15 +365,15 @@ type UpdateType string
 
 const (
 	TypeMessageCallback  UpdateType = "message_callback"
-	TypeMessageCreated              = "message_created"
-	TypeMessageRemoved              = "message_removed"
-	TypeMessageEdited               = "message_edited"
-	TypeBotAdded                    = "bot_added"
-	TypeBotRemoved                  = "bot_removed"
-	TypeUserAdded                   = "user_added"
-	TypeUserRemoved                 = "user_removed"
-	TypeBotStarted                  = "bot_started"
-	TypeChatTitleChanged            = "chat_title_changed"
+	TypeMessageCreated   UpdateType = "message_created"
+	TypeMessageRemoved   UpdateType = "message_removed"
+	TypeMessageEdited    UpdateType = "message_edited"
+	TypeBotAdded         UpdateType = "bot_added"
+	TypeBotRemoved       UpdateType = "bot_removed"
+	TypeUserAdded        UpdateType = "user_added"
+	TypeUserRemoved      UpdateType = "user_removed"
+	TypeBotStarted       UpdateType = "bot_started"
+	TypeChatTitleChanged UpdateType = "chat_title_changed"
 )
 
 // MessageLinkType : Type of linked message
@@ -613,6 +613,8 @@ func (u Update) GetUpdateTime() time.Time {
 type UpdateInterface interface {
 	GetUpdateType() UpdateType
 	GetUpdateTime() time.Time
+	GetUserID() int
+	GetChatID() int
 }
 
 // You will receive this update when bots has been added to chat
@@ -622,6 +624,14 @@ type BotAddedToChatUpdate struct {
 	User   User `json:"user"`    // User who added bots to chat
 }
 
+func (b BotAddedToChatUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b BotAddedToChatUpdate) GetChatID() int {
+	return b.ChatId
+}
+
 // You will receive this update when bots has been removed from chat
 type BotRemovedFromChatUpdate struct {
 	Update
@@ -629,11 +639,27 @@ type BotRemovedFromChatUpdate struct {
 	User   User `json:"user"`    // User who removed bots from chat
 }
 
+func (b BotRemovedFromChatUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b BotRemovedFromChatUpdate) GetChatID() int {
+	return b.ChatId
+}
+
 // Bot gets this type of update as soon as user pressed `Start` button
 type BotStartedUpdate struct {
 	Update
 	ChatId int  `json:"chat_id"` // Dialog identifier where event has occurred
 	User   User `json:"user"`    // User pressed the 'Start' button
+}
+
+func (b BotStartedUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b BotStartedUpdate) GetChatID() int {
+	return b.ChatId
 }
 
 // Object sent to bots when user presses button
@@ -644,12 +670,28 @@ type Callback struct {
 	User       User   `json:"user"`              // User pressed the button
 }
 
+func (b Callback) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b Callback) GetChatID() int {
+	return 0
+}
+
 // Bot gets this type of update as soon as title has been changed in chat
 type ChatTitleChangedUpdate struct {
 	Update
 	ChatId int    `json:"chat_id"` // Chat identifier where event has occurred
 	User   User   `json:"user"`    // User who changed title
 	Title  string `json:"title"`   // New title
+}
+
+func (b ChatTitleChangedUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b ChatTitleChangedUpdate) GetChatID() int {
+	return b.ChatId
 }
 
 // You will get this `update` as soon as user presses button
@@ -659,10 +701,26 @@ type MessageCallbackUpdate struct {
 	Message  *Message `json:"message"` // Original message containing inline keyboard. Can be `null` in case it had been deleted by the moment a bots got this update
 }
 
+func (b MessageCallbackUpdate) GetUserID() int {
+	return b.Callback.User.UserId
+}
+
+func (b MessageCallbackUpdate) GetChatID() int {
+	return 0
+}
+
 // You will get this `update` as soon as message is created
 type MessageCreatedUpdate struct {
 	Update
 	Message Message `json:"message"` // Newly created message
+}
+
+func (b MessageCreatedUpdate) GetUserID() int {
+	return b.Message.Sender.UserId
+}
+
+func (b MessageCreatedUpdate) GetChatID() int {
+	return b.Message.Recipient.ChatId
 }
 
 // You will get this `update` as soon as message is edited
@@ -671,10 +729,26 @@ type MessageEditedUpdate struct {
 	Message Message `json:"message"` // Edited message
 }
 
+func (b MessageEditedUpdate) GetUserID() int {
+	return b.Message.Sender.UserId
+}
+
+func (b MessageEditedUpdate) GetChatID() int {
+	return b.Message.Recipient.ChatId
+}
+
 // You will get this `update` as soon as message is removed
 type MessageRemovedUpdate struct {
 	Update
 	MessageId string `json:"message_id"` // Identifier of removed message
+}
+
+func (b MessageRemovedUpdate) GetUserID() int {
+	return 0
+}
+
+func (b MessageRemovedUpdate) GetChatID() int {
+	return 0
 }
 
 // You will receive this update when user has been added to chat where bots is administrator
@@ -685,10 +759,26 @@ type UserAddedToChatUpdate struct {
 	InviterId int  `json:"inviter_id"` // User who added user to chat
 }
 
+func (b UserAddedToChatUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b UserAddedToChatUpdate) GetChatID() int {
+	return b.ChatId
+}
+
 // You will receive this update when user has been removed from chat where bots is administrator
 type UserRemovedFromChatUpdate struct {
 	Update
 	ChatId  int  `json:"chat_id"`  // Chat identifier where event has occurred
 	User    User `json:"user"`     // User removed from chat
 	AdminId int  `json:"admin_id"` // Administrator who removed user from chat
+}
+
+func (b UserRemovedFromChatUpdate) GetUserID() int {
+	return b.User.UserId
+}
+
+func (b UserRemovedFromChatUpdate) GetChatID() int {
+	return b.ChatId
 }
