@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 //Api implements main part of TamTam API
@@ -42,106 +44,106 @@ func New(key string) *Api {
 	}
 }
 
-func (a *Api) bytesToProperUpdate(b []byte) UpdateInterface {
-	u := new(Update)
+func (a *Api) bytesToProperUpdate(b []byte) schemes.UpdateInterface {
+	u := new(schemes.Update)
 	_ = json.Unmarshal(b, u)
 	switch u.GetUpdateType() {
-	case TypeMessageCallback:
-		upd := new(MessageCallbackUpdate)
+	case schemes.TypeMessageCallback:
+		upd := new(schemes.MessageCallbackUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeMessageCreated:
-		upd := new(MessageCreatedUpdate)
-		_ = json.Unmarshal(b, upd)
-		for _, att := range upd.Message.Body.RawAttachments {
-			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
-		}
-		return upd
-	case TypeMessageRemoved:
-		upd := new(MessageRemovedUpdate)
-		_ = json.Unmarshal(b, upd)
-		return upd
-	case TypeMessageEdited:
-		upd := new(MessageEditedUpdate)
+	case schemes.TypeMessageCreated:
+		upd := new(schemes.MessageCreatedUpdate)
 		_ = json.Unmarshal(b, upd)
 		for _, att := range upd.Message.Body.RawAttachments {
 			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
 		}
 		return upd
-	case TypeBotAdded:
-		upd := new(BotAddedToChatUpdate)
+	case schemes.TypeMessageRemoved:
+		upd := new(schemes.MessageRemovedUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeBotRemoved:
-		upd := new(BotRemovedFromChatUpdate)
+	case schemes.TypeMessageEdited:
+		upd := new(schemes.MessageEditedUpdate)
+		_ = json.Unmarshal(b, upd)
+		for _, att := range upd.Message.Body.RawAttachments {
+			upd.Message.Body.Attachments = append(upd.Message.Body.Attachments, a.bytesToProperAttachment(att))
+		}
+		return upd
+	case schemes.TypeBotAdded:
+		upd := new(schemes.BotAddedToChatUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeUserAdded:
-		upd := new(UserAddedToChatUpdate)
+	case schemes.TypeBotRemoved:
+		upd := new(schemes.BotRemovedFromChatUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeUserRemoved:
-		upd := new(UserRemovedFromChatUpdate)
+	case schemes.TypeUserAdded:
+		upd := new(schemes.UserAddedToChatUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeBotStarted:
-		upd := new(BotStartedUpdate)
+	case schemes.TypeUserRemoved:
+		upd := new(schemes.UserRemovedFromChatUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
-	case TypeChatTitleChanged:
-		upd := new(ChatTitleChangedUpdate)
+	case schemes.TypeBotStarted:
+		upd := new(schemes.BotStartedUpdate)
+		_ = json.Unmarshal(b, upd)
+		return upd
+	case schemes.TypeChatTitleChanged:
+		upd := new(schemes.ChatTitleChangedUpdate)
 		_ = json.Unmarshal(b, upd)
 		return upd
 	}
 	return nil
 }
 
-func (a *Api) bytesToProperAttachment(b []byte) AttachmentInterface {
-	attachment := new(Attachment)
+func (a *Api) bytesToProperAttachment(b []byte) schemes.AttachmentInterface {
+	attachment := new(schemes.Attachment)
 	_ = json.Unmarshal(b, attachment)
 	switch attachment.GetAttachmentType() {
-	case AttachmentAudio:
-		res := new(AudioAttachment)
+	case schemes.AttachmentAudio:
+		res := new(schemes.AudioAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentContact:
-		res := new(ContactAttachment)
+	case schemes.AttachmentContact:
+		res := new(schemes.ContactAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentFile:
-		res := new(FileAttachment)
+	case schemes.AttachmentFile:
+		res := new(schemes.FileAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentImage:
-		res := new(PhotoAttachment)
+	case schemes.AttachmentImage:
+		res := new(schemes.PhotoAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentKeyboard:
-		res := new(InlineKeyboardAttachment)
+	case schemes.AttachmentKeyboard:
+		res := new(schemes.InlineKeyboardAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentLocation:
-		res := new(LocationAttachment)
+	case schemes.AttachmentLocation:
+		res := new(schemes.LocationAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentShare:
-		res := new(ShareAttachment)
+	case schemes.AttachmentShare:
+		res := new(schemes.ShareAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentSticker:
-		res := new(StickerAttachment)
+	case schemes.AttachmentSticker:
+		res := new(schemes.StickerAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
-	case AttachmentVideo:
-		res := new(VideoAttachment)
+	case schemes.AttachmentVideo:
+		res := new(schemes.VideoAttachment)
 		_ = json.Unmarshal(b, res)
 		return res
 	}
 	return attachment
 }
 
-func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*UpdateList, error) {
-	result := new(UpdateList)
+func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*schemes.UpdateList, error) {
+	result := new(schemes.UpdateList)
 	values := url.Values{}
 	if limit > 0 {
 		values.Set("limit", strconv.Itoa(limit))
@@ -171,8 +173,8 @@ func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*U
 }
 
 //GetUpdates returns updates channel
-func (a *Api) GetUpdates(ctx context.Context) chan UpdateInterface {
-	ch := make(chan UpdateInterface)
+func (a *Api) GetUpdates(ctx context.Context) chan schemes.UpdateInterface {
+	ch := make(chan schemes.UpdateInterface)
 	go func() {
 		for {
 			select {

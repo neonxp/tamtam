@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 
 	"github.com/neonxp/tamtam"
+	"github.com/neonxp/tamtam/schemes"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
 		log.Printf("Received: %#v", upd)
 		switch upd := upd.(type) { // Определение типа пришедшего обновления
-		case *tamtam.MessageCreatedUpdate:
+		case *schemes.MessageCreatedUpdate:
 			// Создание клавиатуры
 			keyboard := api.Messages.NewKeyboardBuilder()
 			keyboard.
@@ -34,46 +34,27 @@ func main() {
 				AddContact("Прислать контакт")
 			keyboard.
 				AddRow().
-				AddLink("Библиотека", tamtam.POSITIVE, "https://github.com/neonxp/tamtam").
-				AddCallback("Колбек 1", tamtam.NEGATIVE, "callback_1").
-				AddCallback("Колбек 2", tamtam.NEGATIVE, "callback_2")
+				AddLink("Библиотека", schemes.POSITIVE, "https://github.com/neonxp/tamtam").
+				AddCallback("Колбек 1", schemes.NEGATIVE, "callback_1").
+				AddCallback("Колбек 2", schemes.NEGATIVE, "callback_2")
 			keyboard.
 				AddRow().
-				AddCallback("Картинка", tamtam.POSITIVE, "picture")
+				AddCallback("Картинка", schemes.POSITIVE, "picture")
 
 			// Отправка сообщения с клавиатурой
-			res, err := api.Messages.SendMessage(0, upd.Message.Sender.UserId, &tamtam.NewMessageBody{
-				Text: fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text),
-				Attachments: []interface{}{
-					tamtam.NewInlineKeyboardAttachmentRequest(keyboard.Build()),
-				},
-			})
-			log.Printf("Answer: %#v %#v", res, err)
-		case *tamtam.MessageCallbackUpdate:
+			err := api.Messages.Send(tamtam.NewMessage().SetUser(upd.Message.Sender.UserId).AddKeyboard(keyboard))
+			log.Printf("Answer: %#v", err)
+		case *schemes.MessageCallbackUpdate:
 			// Ответ на коллбек
-			attachments := make([]interface{}, 0)
 			if upd.Callback.Payload == "picture" {
-				photo, err := api.Uploads.UploadPhoto("./examples/example.jpg")
+				photo, err := api.Uploads.UploadPhotoFromFile("./examples/example.jpg")
 				if err != nil {
 					log.Fatal(err)
 				}
-				attachments = append(attachments, tamtam.NewPhotoAttachmentRequest(tamtam.PhotoAttachmentRequestPayload{Photos: photo.Photos}))
+				if err := api.Messages.Send(tamtam.NewMessage().SetUser(upd.Message.Sender.UserId).AddPhoto(photo)); err != nil {
+					log.Fatal(err)
+				}
 			}
-			res, err := api.Messages.AnswerOnCallback(
-				upd.Callback.CallbackID,
-				&tamtam.CallbackAnswer{
-					UserId: upd.Callback.User.UserId,
-					Message: &tamtam.NewMessageBody{
-						Text: "OK!",
-					},
-					Notification: "Callback is ok",
-				})
-			log.Printf("Answer: %#v %#v", res, err)
-			res2, err := api.Messages.SendMessage(0, upd.Callback.User.UserId, &tamtam.NewMessageBody{
-				Text:        upd.Callback.Payload + " at " + upd.GetUpdateTime().String(),
-				Attachments: attachments,
-			})
-			log.Printf("Answer: %#v %#v", res2, err)
 		default:
 			log.Printf("Unknown type: %#v", upd)
 		}

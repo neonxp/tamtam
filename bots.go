@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 type bots struct {
@@ -16,8 +18,8 @@ func newBots(client *client) *bots {
 }
 
 //GetBot returns info about current bot. Current bot can be identified by access token. Method returns bot identifier, name and avatar (if any)
-func (a *bots) GetBot() (*BotInfo, error) {
-	result := new(BotInfo)
+func (a *bots) GetBot() (*schemes.BotInfo, error) {
+	result := new(schemes.BotInfo)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodGet, "me", values, nil)
 	if err != nil {
@@ -32,8 +34,8 @@ func (a *bots) GetBot() (*BotInfo, error) {
 }
 
 //PatchBot edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched
-func (a *bots) PatchBot(patch *BotPatch) (*BotInfo, error) {
-	result := new(BotInfo)
+func (a *bots) PatchBot(patch *schemes.BotPatch) (*schemes.BotInfo, error) {
+	result := new(schemes.BotInfo)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodPatch, "me", values, patch)
 	if err != nil {

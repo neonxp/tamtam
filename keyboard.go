@@ -1,43 +1,45 @@
 package tamtam
 
-//KeyboardBuilder implements builder for inline keyboard
-type KeyboardBuilder struct {
+import "github.com/neonxp/tamtam/schemes"
+
+//Keyboard implements builder for inline keyboard
+type Keyboard struct {
 	rows []*KeyboardRow
 }
 
 //AddRow adds row to inline keyboard
-func (k *KeyboardBuilder) AddRow() *KeyboardRow {
+func (k *Keyboard) AddRow() *KeyboardRow {
 	kr := &KeyboardRow{}
 	k.rows = append(k.rows, kr)
 	return kr
 }
 
 //Build returns result keyboard
-func (k *KeyboardBuilder) Build() Keyboard {
-	buttons := make([][]ButtonInterface, 0, len(k.rows))
+func (k *Keyboard) Build() schemes.Keyboard {
+	buttons := make([][]schemes.ButtonInterface, 0, len(k.rows))
 	for _, r := range k.rows {
 		buttons = append(buttons, r.Build())
 	}
-	return Keyboard{Buttons: buttons}
+	return schemes.Keyboard{Buttons: buttons}
 }
 
 //KeyboardRow represents buttons row
 type KeyboardRow struct {
-	cols []ButtonInterface
+	cols []schemes.ButtonInterface
 }
 
 //Build returns result keyboard row
-func (k *KeyboardRow) Build() []ButtonInterface {
+func (k *KeyboardRow) Build() []schemes.ButtonInterface {
 	return k.cols
 }
 
 //AddLink button
-func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardRow {
-	b := LinkButton{
+func (k *KeyboardRow) AddLink(text string, intent schemes.Intent, url string) *KeyboardRow {
+	b := schemes.LinkButton{
 		Url: url,
-		Button: Button{
+		Button: schemes.Button{
 			Text: text,
-			Type: LINK,
+			Type: schemes.LINK,
 		},
 	}
 	k.cols = append(k.cols, b)
@@ -45,13 +47,13 @@ func (k *KeyboardRow) AddLink(text string, intent Intent, url string) *KeyboardR
 }
 
 //AddCallback button
-func (k *KeyboardRow) AddCallback(text string, intent Intent, payload string) *KeyboardRow {
-	b := CallbackButton{
+func (k *KeyboardRow) AddCallback(text string, intent schemes.Intent, payload string) *KeyboardRow {
+	b := schemes.CallbackButton{
 		Payload: payload,
 		Intent:  intent,
-		Button: Button{
+		Button: schemes.Button{
 			Text: text,
-			Type: CALLBACK,
+			Type: schemes.CALLBACK,
 		},
 	}
 	k.cols = append(k.cols, b)
@@ -60,10 +62,10 @@ func (k *KeyboardRow) AddCallback(text string, intent Intent, payload string) *K
 
 //AddContact button
 func (k *KeyboardRow) AddContact(text string) *KeyboardRow {
-	b := RequestContactButton{
-		Button: Button{
+	b := schemes.RequestContactButton{
+		Button: schemes.Button{
 			Text: text,
-			Type: CONTACT,
+			Type: schemes.CONTACT,
 		},
 	}
 	k.cols = append(k.cols, b)
@@ -72,11 +74,11 @@ func (k *KeyboardRow) AddContact(text string) *KeyboardRow {
 
 //AddGeolocation button
 func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow {
-	b := RequestGeoLocationButton{
+	b := schemes.RequestGeoLocationButton{
 		Quick: quick,
-		Button: Button{
+		Button: schemes.Button{
 			Text: text,
-			Type: GEOLOCATION,
+			Type: schemes.GEOLOCATION,
 		},
 	}
 	k.cols = append(k.cols, b)

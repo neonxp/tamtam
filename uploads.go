@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 type uploads struct {
@@ -20,9 +21,61 @@ func newUploads(client *client) *uploads {
 	return &uploads{client: client}
 }
 
-//GetUploadURL returns url to upload files
-func (a *uploads) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
-	result := new(UploadEndpoint)
+//UploadMedia uploads file to TamTam server
+func (a *uploads) UploadMediaFromFile(uploadType schemes.UploadType, filename string) (*schemes.UploadedInfo, error) {
+	fh, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fh.Close()
+	return a.UploadMediaFromReader(uploadType, fh)
+}
+
+//UploadMediaFromUrl uploads file from remote server to TamTam server
+func (a *uploads) UploadMediaFromUrl(uploadType schemes.UploadType, u url.URL) (*schemes.UploadedInfo, error) {
+	respFile, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	defer respFile.Body.Close()
+	return a.UploadMediaFromReader(uploadType, respFile.Body)
+}
+
+func (a *uploads) UploadMediaFromReader(uploadType schemes.UploadType, reader io.Reader) (*schemes.UploadedInfo, error) {
+	result := new(schemes.UploadedInfo)
+	return result, a.uploadMediaFromReader(uploadType, reader, result)
+}
+
+//UploadPhotoFromFile uploads photos to TamTam server
+func (a *uploads) UploadPhotoFromFile(filename string) (*schemes.PhotoTokens, error) {
+	fh, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fh.Close()
+	result := new(schemes.PhotoTokens)
+	return result, a.uploadMediaFromReader(schemes.PHOTO, fh, result)
+}
+
+//UploadPhotoFromUrl uploads photo from remote server to TamTam server
+func (a *uploads) UploadPhotoFromUrl(u url.URL) (*schemes.PhotoTokens, error) {
+	respFile, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	defer respFile.Body.Close()
+	result := new(schemes.PhotoTokens)
+	return result, a.uploadMediaFromReader(schemes.PHOTO, respFile.Body, result)
+}
+
+//UploadPhotoFromReader uploads photo from reader
+func (a *uploads) UploadPhotoFromReader(reader io.Reader) (*schemes.PhotoTokens, error) {
+	result := new(schemes.PhotoTokens)
+	return result, a.uploadMediaFromReader(schemes.PHOTO, reader, result)
+}
+
+func (a *uploads) getUploadURL(uploadType schemes.UploadType) (*schemes.UploadEndpoint, error) {
+	result := new(schemes.UploadEndpoint)
 	values := url.Values{}
 	values.Set("type", string(uploadType))
 	body, err := a.client.request(http.MethodPost, "uploads", values, nil)
@@ -37,128 +90,37 @@ func (a *uploads) GetUploadURL(uploadType UploadType) (*UploadEndpoint, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-//UploadMedia uploads file to TamTam server
-func (a *uploads) UploadMedia(endpoint *UploadEndpoint, filename string) (*UploadedInfo, error) {
+func (a *uploads) uploadMediaFromReader(uploadType schemes.UploadType, reader io.Reader, result interface{}) error {
+	endpoint, err := a.getUploadURL(uploadType)
+	if err != nil {
+		return err
+	}
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	fileWriter, err := bodyWriter.CreateFormFile("data", filename)
+	fileWriter, err := bodyWriter.CreateFormFile("data", "file")
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	fh, err := os.Open(filename)
+	_, err = io.Copy(fileWriter, reader)
 	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := fh.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := bodyWriter.Close(); err != nil {
-		return nil, err
+		return err
 	}
 	contentType := bodyWriter.FormDataContentType()
+	if err := bodyWriter.Close(); err != nil {
+		return err
+	}
 	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println(err)
 		}
 	}()
-	result := new(UploadedInfo)
-	return result, json.NewDecoder(resp.Body).Decode(result)
-}
-
-//UploadMediaFromUrl uploads file from remote server to TamTam server
-func (a *uploads) UploadMediaFromUrl(endpoint *UploadEndpoint, u url.URL) (*UploadedInfo, error) {
-	respFile, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer respFile.Body.Close()
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-	fileWriter, err := bodyWriter.CreateFormFile("data", path.Base(u.Path))
-	if err != nil {
-		return nil, err
-	}
-	_, err = io.Copy(fileWriter, respFile.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := bodyWriter.Close(); err != nil {
-		return nil, err
-	}
-	contentType := bodyWriter.FormDataContentType()
-	if err := bodyWriter.Close(); err != nil {
-		return nil, err
-	}
-	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	result := new(UploadedInfo)
-	return result, json.NewDecoder(resp.Body).Decode(result)
-}
-
-//UploadPhoto uploads photos to TamTam server
-func (a *uploads) UploadPhoto(filename string) (*PhotoTokens, error) {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	fileWriter, err := bodyWriter.CreateFormFile("data", filename)
-	if err != nil {
-		return nil, err
-	}
-
-	fh, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := fh.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := bodyWriter.Close(); err != nil {
-		return nil, err
-	}
-
-	endpoint, err := a.GetUploadURL(PHOTO)
-	if err != nil {
-		return nil, err
-	}
-	contentType := bodyWriter.FormDataContentType()
-
-	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	result := new(PhotoTokens)
-	return result, json.NewDecoder(resp.Body).Decode(result)
+	return json.NewDecoder(resp.Body).Decode(result)
 }

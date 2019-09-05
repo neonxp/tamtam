@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 type chats struct {
@@ -18,8 +20,8 @@ func newChats(client *client) *chats {
 }
 
 //GetChats returns information about chats that bot participated in: a result list and marker points to the next page
-func (a *chats) GetChats(count, marker int) (*ChatList, error) {
-	result := new(ChatList)
+func (a *chats) GetChats(count, marker int) (*schemes.ChatList, error) {
+	result := new(schemes.ChatList)
 	values := url.Values{}
 	if count > 0 {
 		values.Set("count", strconv.Itoa(int(count)))
@@ -40,8 +42,8 @@ func (a *chats) GetChats(count, marker int) (*ChatList, error) {
 }
 
 //GetChat returns info about chat
-func (a *chats) GetChat(chatID int) (*Chat, error) {
-	result := new(Chat)
+func (a *chats) GetChat(chatID int) (*schemes.Chat, error) {
+	result := new(schemes.Chat)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodGet, fmt.Sprintf("chats/%d", chatID), values, nil)
 	if err != nil {
@@ -56,8 +58,8 @@ func (a *chats) GetChat(chatID int) (*Chat, error) {
 }
 
 //GetChatMembership returns chat membership info for current bot
-func (a *chats) GetChatMembership(chatID int) (*ChatMember, error) {
-	result := new(ChatMember)
+func (a *chats) GetChatMembership(chatID int) (*schemes.ChatMember, error) {
+	result := new(schemes.ChatMember)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodGet, fmt.Sprintf("chats/%d/members/me", chatID), values, nil)
 	if err != nil {
@@ -72,8 +74,8 @@ func (a *chats) GetChatMembership(chatID int) (*ChatMember, error) {
 }
 
 //GetChatMembers returns users participated in chat
-func (a *chats) GetChatMembers(chatID, count, marker int) (*ChatMembersList, error) {
-	result := new(ChatMembersList)
+func (a *chats) GetChatMembers(chatID, count, marker int) (*schemes.ChatMembersList, error) {
+	result := new(schemes.ChatMembersList)
 	values := url.Values{}
 	if count > 0 {
 		values.Set("count", strconv.Itoa(int(count)))
@@ -94,8 +96,8 @@ func (a *chats) GetChatMembers(chatID, count, marker int) (*ChatMembersList, err
 }
 
 //LeaveChat removes bot from chat members
-func (a *chats) LeaveChat(chatID int) (*SimpleQueryResult, error) {
-	result := new(SimpleQueryResult)
+func (a *chats) LeaveChat(chatID int) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodDelete, fmt.Sprintf("chats/%d/members/me", chatID), values, nil)
 	if err != nil {
@@ -110,8 +112,8 @@ func (a *chats) LeaveChat(chatID int) (*SimpleQueryResult, error) {
 }
 
 //EditChat edits chat info: title, icon, etc…
-func (a *chats) EditChat(chatID int, update *ChatPatch) (*Chat, error) {
-	result := new(Chat)
+func (a *chats) EditChat(chatID int, update *schemes.ChatPatch) (*schemes.Chat, error) {
+	result := new(schemes.Chat)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodPatch, fmt.Sprintf("chats/%d", chatID), values, update)
 	if err != nil {
@@ -126,8 +128,8 @@ func (a *chats) EditChat(chatID int, update *ChatPatch) (*Chat, error) {
 }
 
 //AddMember adds members to chat. Additional permissions may require.
-func (a *chats) AddMember(chatID int, users UserIdsList) (*SimpleQueryResult, error) {
-	result := new(SimpleQueryResult)
+func (a *chats) AddMember(chatID int, users schemes.UserIdsList) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodPost, fmt.Sprintf("chats/%d/members", chatID), values, users)
 	if err != nil {
@@ -142,8 +144,8 @@ func (a *chats) AddMember(chatID int, users UserIdsList) (*SimpleQueryResult, er
 }
 
 //RemoveMember removes member from chat. Additional permissions may require.
-func (a *chats) RemoveMember(chatID int, userID int) (*SimpleQueryResult, error) {
-	result := new(SimpleQueryResult)
+func (a *chats) RemoveMember(chatID int, userID int) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("user_id", strconv.Itoa(int(userID)))
 	body, err := a.client.request(http.MethodDelete, fmt.Sprintf("chats/%d/members", chatID), values, nil)
@@ -159,10 +161,10 @@ func (a *chats) RemoveMember(chatID int, userID int) (*SimpleQueryResult, error)
 }
 
 //SendAction send bot action to chat
-func (a *chats) SendAction(chatID int, action SenderAction) (*SimpleQueryResult, error) {
-	result := new(SimpleQueryResult)
+func (a *chats) SendAction(chatID int, action schemes.SenderAction) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	body, err := a.client.request(http.MethodPost, fmt.Sprintf("chats/%d/actions", chatID), values, ActionRequestBody{Action: action})
+	body, err := a.client.request(http.MethodPost, fmt.Sprintf("chats/%d/actions", chatID), values, schemes.ActionRequestBody{Action: action})
 	if err != nil {
 		return result, err
 	}

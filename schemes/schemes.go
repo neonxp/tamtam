@@ -1,4 +1,4 @@
-package tamtam
+package schemes
 
 import (
 	"encoding/json"

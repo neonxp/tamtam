@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 type subscriptions struct {
@@ -16,8 +18,8 @@ func newSubscriptions(client *client) *subscriptions {
 }
 
 //GetSubscriptions returns list of all subscriptions
-func (a *subscriptions) GetSubscriptions() (*GetSubscriptionsResult, error) {
-	result := new(GetSubscriptionsResult)
+func (a *subscriptions) GetSubscriptions() (*schemes.GetSubscriptionsResult, error) {
+	result := new(schemes.GetSubscriptionsResult)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodGet, "subscriptions", values, nil)
 	if err != nil {
@@ -32,13 +34,13 @@ func (a *subscriptions) GetSubscriptions() (*GetSubscriptionsResult, error) {
 }
 
 //Subscribe subscribes bot to receive updates via WebHook
-func (a *subscriptions) Subscribe(subscribeURL string, updateTypes []string) (*SimpleQueryResult, error) {
-	subscription := &SubscriptionRequestBody{
+func (a *subscriptions) Subscribe(subscribeURL string, updateTypes []string) (*schemes.SimpleQueryResult, error) {
+	subscription := &schemes.SubscriptionRequestBody{
 		Url:         subscribeURL,
 		UpdateTypes: updateTypes,
 		Version:     a.client.version,
 	}
-	result := new(SimpleQueryResult)
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(http.MethodPost, "subscriptions", values, subscription)
 	if err != nil {
@@ -53,8 +55,8 @@ func (a *subscriptions) Subscribe(subscribeURL string, updateTypes []string) (*S
 }
 
 //Unsubscribe unsubscribes bot from receiving updates via WebHook
-func (a *subscriptions) Unsubscribe(subscriptionURL string) (*SimpleQueryResult, error) {
-	result := new(SimpleQueryResult)
+func (a *subscriptions) Unsubscribe(subscriptionURL string) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("url", subscriptionURL)
 	body, err := a.client.request(http.MethodDelete, "subscriptions", values, nil)

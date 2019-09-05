@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/neonxp/tamtam/schemes"
 )
 
 type client struct {
@@ -42,7 +44,7 @@ func (cl *client) requestReader(method, path string, query url.Values, body io.R
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		errObj := new(Error)
+		errObj := new(schemes.Error)
 		err = json.NewDecoder(resp.Body).Decode(errObj)
 		if err != nil {
 			return nil, err

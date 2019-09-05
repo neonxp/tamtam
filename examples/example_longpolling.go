@@ -29,9 +29,11 @@ func main() {
 			log.Printf("Received: %#v", upd)
 			switch upd := upd.(type) {
 			case *tamtam.MessageCreatedUpdate:
-				res, err := api.Messages.SendMessage(0, upd.Message.Sender.UserId, &tamtam.NewMessageBody{
-					Text: fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text),
-				})
+				err := api.Messages.Send(
+					tamtam.NewMessage().
+						SetUser(upd.Message.Sender.UserId).
+						SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text)),
+				)
 				log.Printf("Answer: %#v %#v", res, err)
 			default:
 				log.Printf("Unknown type: %#v", upd)
