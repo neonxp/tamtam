@@ -228,9 +228,13 @@ type ContactAttachmentRequestPayload struct {
 
 // Server returns this if there was an exception to your request
 type Error struct {
-	Error   string `json:"error,omitempty"` // Error
-	Code    string `json:"code"`            // Error code
-	Message string `json:"message"`         // Human-readable description
+	ErrorText string `json:"error,omitempty"` // Error
+	Code      string `json:"code"`            // Error code
+	Message   string `json:"message"`         // Human-readable description
+}
+
+func (e Error) Error() string {
+	return e.ErrorText
 }
 
 type FileAttachment struct {

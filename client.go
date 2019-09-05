@@ -3,7 +3,6 @@ package tamtam
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -48,7 +47,7 @@ func (cl *client) requestReader(method, path string, query url.Values, body io.R
 		if err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("code=%s message=%s error=%s", errObj.Code, errObj.Message, errObj.Error)
+		return nil, errObj
 	}
 	return resp.Body, err
 }
