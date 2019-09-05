@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 )
 
 type uploads struct {
@@ -64,6 +65,44 @@ func (a *uploads) UploadMedia(endpoint *UploadEndpoint, filename string) (*Uploa
 		return nil, err
 	}
 	contentType := bodyWriter.FormDataContentType()
+	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	result := new(UploadedInfo)
+	return result, json.NewDecoder(resp.Body).Decode(result)
+}
+
+//UploadMediaFromUrl uploads file from remote server to TamTam server
+func (a *uploads) UploadMediaFromUrl(endpoint *UploadEndpoint, u url.URL) (*UploadedInfo, error) {
+	respFile, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	defer respFile.Body.Close()
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+	fileWriter, err := bodyWriter.CreateFormFile("data", path.Base(u.Path))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(fileWriter, respFile.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bodyWriter.Close(); err != nil {
+		return nil, err
+	}
+	contentType := bodyWriter.FormDataContentType()
+	if err := bodyWriter.Close(); err != nil {
+		return nil, err
+	}
 	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
 	if err != nil {
 		return nil, err
