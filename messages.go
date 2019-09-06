@@ -125,7 +125,8 @@ func (a *messages) sendMessage(chatID int, userID int, message *schemes.NewMessa
 	}
 	defer body.Close()
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		return err
+		// Message sent without errors
+		return nil
 	}
 	if result.Code == "" {
 		return nil
