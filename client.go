@@ -41,6 +41,12 @@ func (cl *client) requestReader(method, path string, query url.Values, body io.R
 	}
 	resp, err := cl.httpClient.Do(req)
 	if err != nil {
+		err, ok := err.(*url.Error)
+		if ok {
+			if err.Timeout() {
+				return nil, nil
+			}
+		}
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
