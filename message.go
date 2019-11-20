@@ -3,8 +3,8 @@ package tamtam
 import "github.com/neonxp/tamtam/schemes"
 
 type Message struct {
-	userID  int
-	chatID  int
+	userID  int64
+	chatID  int64
 	message *schemes.NewMessageBody
 }
 
@@ -12,11 +12,11 @@ func NewMessage() *Message {
 	return &Message{userID: 0, chatID: 0, message: &schemes.NewMessageBody{Attachments: []interface{}{}}}
 }
 
-func (m *Message) SetUser(userID int) *Message {
+func (m *Message) SetUser(userID int64) *Message {
 	m.userID = userID
 	return m
 }
-func (m *Message) SetChat(chatID int) *Message {
+func (m *Message) SetChat(chatID int64) *Message {
 	m.chatID = chatID
 	return m
 }
@@ -63,7 +63,7 @@ func (m *Message) AddLocation(lat float64, lon float64) *Message {
 	return m
 }
 
-func (m *Message) AddContact(name string, contactID int, vcfInfo string, vcfPhone string) *Message {
+func (m *Message) AddContact(name string, contactID int64, vcfInfo string, vcfPhone string) *Message {
 	m.message.Attachments = append(m.message.Attachments, schemes.NewContactAttachmentRequest(schemes.ContactAttachmentRequestPayload{
 		Name:      name,
 		ContactId: contactID,

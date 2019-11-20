@@ -20,7 +20,7 @@ func newMessages(client *client) *messages {
 }
 
 //GetMessages returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use from and to parameters, to must be less than from
-func (a *messages) GetMessages(chatID int, messageIDs []string, from int, to int, count int) (*schemes.MessageList, error) {
+func (a *messages) GetMessages(chatID int64, messageIDs []string, from int, to int, count int) (*schemes.MessageList, error) {
 	result := new(schemes.MessageList)
 	values := url.Values{}
 	if chatID != 0 {
@@ -32,13 +32,13 @@ func (a *messages) GetMessages(chatID int, messageIDs []string, from int, to int
 		}
 	}
 	if from != 0 {
-		values.Set("from", strconv.Itoa(int(from)))
+		values.Set("from", strconv.Itoa(from))
 	}
 	if to != 0 {
-		values.Set("to", strconv.Itoa(int(to)))
+		values.Set("to", strconv.Itoa(to))
 	}
 	if count > 0 {
-		values.Set("count", strconv.Itoa(int(count)))
+		values.Set("count", strconv.Itoa(count))
 	}
 	body, err := a.client.request(http.MethodGet, "messages", values, nil)
 	if err != nil {
@@ -53,7 +53,7 @@ func (a *messages) GetMessages(chatID int, messageIDs []string, from int, to int
 }
 
 //EditMessage updates message by id
-func (a *messages) EditMessage(messageID int, message *Message) error {
+func (a *messages) EditMessage(messageID int64, message *Message) error {
 	s, err := a.editMessage(messageID, message.message)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (a *messages) EditMessage(messageID int, message *Message) error {
 }
 
 //DeleteMessage deletes message by id
-func (a *messages) DeleteMessage(messageID int) (*schemes.SimpleQueryResult, error) {
+func (a *messages) DeleteMessage(messageID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("message_id", strconv.Itoa(int(messageID)))
@@ -110,7 +110,7 @@ func (a *messages) Send(m *Message) error {
 	return a.sendMessage(m.chatID, m.userID, m.message)
 }
 
-func (a *messages) sendMessage(chatID int, userID int, message *schemes.NewMessageBody) error {
+func (a *messages) sendMessage(chatID int64, userID int64, message *schemes.NewMessageBody) error {
 	result := new(schemes.Error)
 	values := url.Values{}
 	if chatID != 0 {
@@ -134,7 +134,7 @@ func (a *messages) sendMessage(chatID int, userID int, message *schemes.NewMessa
 	return result
 }
 
-func (a *messages) editMessage(messageID int, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
+func (a *messages) editMessage(messageID int64, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("message_id", strconv.Itoa(int(messageID)))

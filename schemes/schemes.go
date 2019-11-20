@@ -67,7 +67,7 @@ type BotCommand struct {
 }
 
 type BotInfo struct {
-	UserId        int          `json:"user_id"`                   // Users identifier
+	UserId        int64        `json:"user_id"`                   // Users identifier
 	Name          string       `json:"name"`                      // Users visible name
 	Username      string       `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
 	AvatarUrl     string       `json:"avatar_url,omitempty"`      // URL of avatar
@@ -104,7 +104,7 @@ type ButtonInterface interface {
 
 // Send this object when your bots wants to react to when a button is pressed
 type CallbackAnswer struct {
-	UserId       int             `json:"user_id,omitempty"`
+	UserId       int64           `json:"user_id,omitempty"`
 	Message      *NewMessageBody `json:"message,omitempty"`      // Fill this if you want to modify current message
 	Notification string          `json:"notification,omitempty"` // Fill this if you just want to send one-time notification to user
 }
@@ -122,18 +122,18 @@ type CallbackButtonAllOf struct {
 }
 
 type Chat struct {
-	ChatId            int                     `json:"chat_id"`                // Chats identifier
-	Type              ChatType                `json:"type"`                   // Type of chat. One of: dialog, chat, channel
-	Status            ChatStatus              `json:"status"`                 // Chat status. One of:  - active: bots is active member of chat  - removed: bots was kicked  - left: bots intentionally left chat  - closed: chat was closed
-	Title             string                  `json:"title,omitempty"`        // Visible title of chat. Can be null for dialogs
-	Icon              *Image                  `json:"icon"`                   // Icon of chat
-	LastEventTime     int                     `json:"last_event_time"`        // Time of last event occurred in chat
-	ParticipantsCount int                     `json:"participants_count"`     // Number of people in chat. Always 2 for `dialog` chat type
-	OwnerId           int                     `json:"owner_id,omitempty"`     // Identifier of chat owner. Visible only for chat admins
-	Participants      *map[string]int         `json:"participants,omitempty"` // Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only
-	IsPublic          bool                    `json:"is_public"`              // Is current chat publicly available. Always `false` for dialogs
-	Link              string                  `json:"link,omitempty"`         // Link on chat if it is public
-	Description       *map[string]interface{} `json:"description"`            // Chat description
+	ChatId            int64           `json:"chat_id"`                // Chats identifier
+	Type              ChatType        `json:"type"`                   // Type of chat. One of: dialog, chat, channel
+	Status            ChatStatus      `json:"status"`                 // Chat status. One of:  - active: bots is active member of chat  - removed: bots was kicked  - left: bots intentionally left chat  - closed: chat was closed
+	Title             string          `json:"title,omitempty"`        // Visible title of chat. Can be null for dialogs
+	Icon              *Image          `json:"icon"`                   // Icon of chat
+	LastEventTime     int             `json:"last_event_time"`        // Time of last event occurred in chat
+	ParticipantsCount int             `json:"participants_count"`     // Number of people in chat. Always 2 for `dialog` chat type
+	OwnerId           int64           `json:"owner_id,omitempty"`     // Identifier of chat owner. Visible only for chat admins
+	Participants      *map[string]int `json:"participants,omitempty"` // Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only
+	IsPublic          bool            `json:"is_public"`              // Is current chat publicly available. Always `false` for dialogs
+	Link              string          `json:"link,omitempty"`         // Link on chat if it is public
+	Description       *string         `json:"description"`            // Chat description
 }
 
 // ChatAdminPermission : Chat admin permissions
@@ -155,7 +155,7 @@ type ChatList struct {
 }
 
 type ChatMember struct {
-	UserId         int                   `json:"user_id"`                   // Users identifier
+	UserId         int64                 `json:"user_id"`                   // Users identifier
 	Name           string                `json:"name"`                      // Users visible name
 	Username       string                `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
 	AvatarUrl      string                `json:"avatar_url,omitempty"`      // URL of avatar
@@ -169,7 +169,7 @@ type ChatMember struct {
 
 type ChatMembersList struct {
 	Members []ChatMember `json:"members"` // Participants in chat with time of last activity. Visible only for chat admins
-	Marker  *int         `json:"marker"`  // Pointer to the next data page
+	Marker  *int64       `json:"marker"`  // Pointer to the next data page
 }
 
 type ChatPatch struct {
@@ -221,7 +221,7 @@ func NewContactAttachmentRequest(payload ContactAttachmentRequestPayload) *Conta
 
 type ContactAttachmentRequestPayload struct {
 	Name      string `json:"name,omitempty"`      // Contact name
-	ContactId int    `json:"contactId,omitempty"` // Contact identifier
+	ContactId int64  `json:"contactId,omitempty"` // Contact identifier
 	VcfInfo   string `json:"vcfInfo,omitempty"`   // Full information about contact in VCF format
 	VcfPhone  string `json:"vcfPhone,omitempty"`  // Contact phone in VCF format
 }
@@ -241,7 +241,7 @@ type FileAttachment struct {
 	Attachment
 	Payload  FileAttachmentPayload `json:"payload"`
 	Filename string                `json:"filename"` // Uploaded file name
-	Size     int                   `json:"size"`     // File size in bytes
+	Size     int64                 `json:"size"`     // File size in bytes
 }
 
 type FileAttachmentPayload struct {
@@ -319,7 +319,7 @@ type LinkButton struct {
 type LinkedMessage struct {
 	Type    MessageLinkType `json:"type"`              // Type of linked message
 	Sender  User            `json:"sender,omitempty"`  // User sent this message. Can be `null` if message has been posted on behalf of a channel
-	ChatId  int             `json:"chat_id,omitempty"` // Chat where message has been originally posted. For forwarded messages only
+	ChatId  int64           `json:"chat_id,omitempty"` // Chat where message has been originally posted. For forwarded messages only
 	Message MessageBody     `json:"message"`
 }
 
@@ -349,7 +349,7 @@ type MediaAttachmentPayload struct {
 type Message struct {
 	Sender    User           `json:"sender,omitempty"` // User that sent this message. Can be `null` if message has been posted on behalf of a channel
 	Recipient Recipient      `json:"recipient"`        // Message recipient. Could be user or chat
-	Timestamp int            `json:"timestamp"`        // Unix-time when message was created
+	Timestamp int64          `json:"timestamp"`        // Unix-time when message was created
 	Link      *LinkedMessage `json:"link,omitempty"`   // Forwarder or replied message
 	Body      MessageBody    `json:"body"`             // Body of created message. Text + attachments. Could be null if message contains only forwarded message
 	Stat      *MessageStat   `json:"stat,omitempty"`   // Message statistics. Available only for channels in [GET:/messages](#operation/getMessages) context
@@ -358,7 +358,7 @@ type Message struct {
 // Schema representing body of message
 type MessageBody struct {
 	Mid            string            `json:"mid"`            // Unique identifier of message
-	Seq            int               `json:"seq"`            // Sequence identifier of message in chat
+	Seq            int64             `json:"seq"`            // Sequence identifier of message in chat
 	Text           string            `json:"text,omitempty"` // Message text
 	RawAttachments []json.RawMessage `json:"attachments"`    // Message attachments. Could be one of `Attachment` type. See description of this schema
 	Attachments    []interface{}
@@ -418,7 +418,7 @@ type PhotoAttachment struct {
 }
 
 type PhotoAttachmentPayload struct {
-	PhotoId int    `json:"photo_id"` // Unique identifier of this image
+	PhotoId int64  `json:"photo_id"` // Unique identifier of this image
 	Token   string `json:"token"`
 	Url     string `json:"url"` // Image URL
 }
@@ -454,9 +454,9 @@ type PhotoTokens struct {
 
 // New message recipient. Could be user or chat
 type Recipient struct {
-	ChatId   int      `json:"chat_id,omitempty"` // Chat identifier
+	ChatId   int64    `json:"chat_id,omitempty"` // Chat identifier
 	ChatType ChatType `json:"chat_type"`         // Chat type
-	UserId   int      `json:"user_id,omitempty"` // User identifier, if message was sent to user
+	UserId   int64    `json:"user_id,omitempty"` // User identifier, if message was sent to user
 }
 
 // After pressing this type of button client sends new message with attachment of current user contact
@@ -527,7 +527,7 @@ type StickerAttachmentRequestPayload struct {
 // Schema to describe WebHook subscription
 type Subscription struct {
 	Url         string   `json:"url"`                    // Webhook URL
-	Time        int      `json:"time"`                   // Unix-time when subscription was created
+	Time        int64    `json:"time"`                   // Unix-time when subscription was created
 	UpdateTypes []string `json:"update_types,omitempty"` // Update types bots subscribed for
 	Version     string   `json:"version,omitempty"`
 }
@@ -542,7 +542,7 @@ type SubscriptionRequestBody struct {
 // List of all updates in chats your bots participated in
 type UpdateList struct {
 	Updates []json.RawMessage `json:"updates"` // Page of updates
-	Marker  *int              `json:"marker"`  // Pointer to the next data page
+	Marker  *int64            `json:"marker"`  // Pointer to the next data page
 }
 
 // Endpoint you should upload to your binaries
@@ -563,12 +563,12 @@ const (
 
 // This is information you will receive as soon as audio/video is uploaded
 type UploadedInfo struct {
-	FileID int    `json:"file_id,omitempty"`
+	FileID int64  `json:"file_id,omitempty"`
 	Token  string `json:"token,omitempty"` // Token is unique uploaded media identfier
 }
 
 type User struct {
-	UserId   int    `json:"user_id"`            // Users identifier
+	UserId   int64  `json:"user_id"`            // Users identifier
 	Name     string `json:"name"`               // Users visible name
 	Username string `json:"username,omitempty"` // Unique public user name. Can be `null` if user is not accessible or it is not set
 }
@@ -578,7 +578,7 @@ type UserIdsList struct {
 }
 
 type UserWithPhoto struct {
-	UserId        int    `json:"user_id"`                   // Users identifier
+	UserId        int64  `json:"user_id"`                   // Users identifier
 	Name          string `json:"name"`                      // Users visible name
 	Username      string `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
 	AvatarUrl     string `json:"avatar_url,omitempty"`      // URL of avatar
@@ -617,84 +617,84 @@ func (u Update) GetUpdateTime() time.Time {
 type UpdateInterface interface {
 	GetUpdateType() UpdateType
 	GetUpdateTime() time.Time
-	GetUserID() int
-	GetChatID() int
+	GetUserID() int64
+	GetChatID() int64
 }
 
 // You will receive this update when bots has been added to chat
 type BotAddedToChatUpdate struct {
 	Update
-	ChatId int  `json:"chat_id"` // Chat id where bots was added
-	User   User `json:"user"`    // User who added bots to chat
+	ChatId int64 `json:"chat_id"` // Chat id where bots was added
+	User   User  `json:"user"`    // User who added bots to chat
 }
 
-func (b BotAddedToChatUpdate) GetUserID() int {
+func (b BotAddedToChatUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b BotAddedToChatUpdate) GetChatID() int {
+func (b BotAddedToChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
 // You will receive this update when bots has been removed from chat
 type BotRemovedFromChatUpdate struct {
 	Update
-	ChatId int  `json:"chat_id"` // Chat identifier bots removed from
-	User   User `json:"user"`    // User who removed bots from chat
+	ChatId int64 `json:"chat_id"` // Chat identifier bots removed from
+	User   User  `json:"user"`    // User who removed bots from chat
 }
 
-func (b BotRemovedFromChatUpdate) GetUserID() int {
+func (b BotRemovedFromChatUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b BotRemovedFromChatUpdate) GetChatID() int {
+func (b BotRemovedFromChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
 // Bot gets this type of update as soon as user pressed `Start` button
 type BotStartedUpdate struct {
 	Update
-	ChatId int  `json:"chat_id"` // Dialog identifier where event has occurred
-	User   User `json:"user"`    // User pressed the 'Start' button
+	ChatId int64 `json:"chat_id"` // Dialog identifier where event has occurred
+	User   User  `json:"user"`    // User pressed the 'Start' button
 }
 
-func (b BotStartedUpdate) GetUserID() int {
+func (b BotStartedUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b BotStartedUpdate) GetChatID() int {
+func (b BotStartedUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
 // Object sent to bots when user presses button
 type Callback struct {
-	Timestamp  int    `json:"timestamp"` // Unix-time when event has occurred
+	Timestamp  int64  `json:"timestamp"` // Unix-time when event has occurred
 	CallbackID string `json:"callback_id"`
 	Payload    string `json:"payload,omitempty"` // Button payload
 	User       User   `json:"user"`              // User pressed the button
 }
 
-func (b Callback) GetUserID() int {
+func (b Callback) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b Callback) GetChatID() int {
+func (b Callback) GetChatID() int64 {
 	return 0
 }
 
 // Bot gets this type of update as soon as title has been changed in chat
 type ChatTitleChangedUpdate struct {
 	Update
-	ChatId int    `json:"chat_id"` // Chat identifier where event has occurred
+	ChatId int64  `json:"chat_id"` // Chat identifier where event has occurred
 	User   User   `json:"user"`    // User who changed title
 	Title  string `json:"title"`   // New title
 }
 
-func (b ChatTitleChangedUpdate) GetUserID() int {
+func (b ChatTitleChangedUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b ChatTitleChangedUpdate) GetChatID() int {
+func (b ChatTitleChangedUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
@@ -705,11 +705,11 @@ type MessageCallbackUpdate struct {
 	Message  *Message `json:"message"` // Original message containing inline keyboard. Can be `null` in case it had been deleted by the moment a bots got this update
 }
 
-func (b MessageCallbackUpdate) GetUserID() int {
+func (b MessageCallbackUpdate) GetUserID() int64 {
 	return b.Callback.User.UserId
 }
 
-func (b MessageCallbackUpdate) GetChatID() int {
+func (b MessageCallbackUpdate) GetChatID() int64 {
 	return 0
 }
 
@@ -719,11 +719,11 @@ type MessageCreatedUpdate struct {
 	Message Message `json:"message"` // Newly created message
 }
 
-func (b MessageCreatedUpdate) GetUserID() int {
+func (b MessageCreatedUpdate) GetUserID() int64 {
 	return b.Message.Sender.UserId
 }
 
-func (b MessageCreatedUpdate) GetChatID() int {
+func (b MessageCreatedUpdate) GetChatID() int64 {
 	return b.Message.Recipient.ChatId
 }
 
@@ -733,11 +733,11 @@ type MessageEditedUpdate struct {
 	Message Message `json:"message"` // Edited message
 }
 
-func (b MessageEditedUpdate) GetUserID() int {
+func (b MessageEditedUpdate) GetUserID() int64 {
 	return b.Message.Sender.UserId
 }
 
-func (b MessageEditedUpdate) GetChatID() int {
+func (b MessageEditedUpdate) GetChatID() int64 {
 	return b.Message.Recipient.ChatId
 }
 
@@ -747,42 +747,42 @@ type MessageRemovedUpdate struct {
 	MessageId string `json:"message_id"` // Identifier of removed message
 }
 
-func (b MessageRemovedUpdate) GetUserID() int {
+func (b MessageRemovedUpdate) GetUserID() int64 {
 	return 0
 }
 
-func (b MessageRemovedUpdate) GetChatID() int {
+func (b MessageRemovedUpdate) GetChatID() int64 {
 	return 0
 }
 
 // You will receive this update when user has been added to chat where bots is administrator
 type UserAddedToChatUpdate struct {
 	Update
-	ChatId    int  `json:"chat_id"`    // Chat identifier where event has occurred
-	User      User `json:"user"`       // User added to chat
-	InviterId int  `json:"inviter_id"` // User who added user to chat
+	ChatId    int64 `json:"chat_id"`    // Chat identifier where event has occurred
+	User      User  `json:"user"`       // User added to chat
+	InviterId int64 `json:"inviter_id"` // User who added user to chat
 }
 
-func (b UserAddedToChatUpdate) GetUserID() int {
+func (b UserAddedToChatUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b UserAddedToChatUpdate) GetChatID() int {
+func (b UserAddedToChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
 // You will receive this update when user has been removed from chat where bots is administrator
 type UserRemovedFromChatUpdate struct {
 	Update
-	ChatId  int  `json:"chat_id"`  // Chat identifier where event has occurred
-	User    User `json:"user"`     // User removed from chat
-	AdminId int  `json:"admin_id"` // Administrator who removed user from chat
+	ChatId  int64 `json:"chat_id"`  // Chat identifier where event has occurred
+	User    User  `json:"user"`     // User removed from chat
+	AdminId int64 `json:"admin_id"` // Administrator who removed user from chat
 }
 
-func (b UserRemovedFromChatUpdate) GetUserID() int {
+func (b UserRemovedFromChatUpdate) GetUserID() int64 {
 	return b.User.UserId
 }
 
-func (b UserRemovedFromChatUpdate) GetChatID() int {
+func (b UserRemovedFromChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }

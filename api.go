@@ -142,7 +142,7 @@ func (a *Api) bytesToProperAttachment(b []byte) schemes.AttachmentInterface {
 	return attachment
 }
 
-func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*schemes.UpdateList, error) {
+func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (*schemes.UpdateList, error) {
 	result := new(schemes.UpdateList)
 	values := url.Values{}
 	if limit > 0 {
@@ -152,7 +152,7 @@ func (a *Api) getUpdates(limit int, timeout int, marker int, types []string) (*s
 		values.Set("timeout", strconv.Itoa(timeout))
 	}
 	if marker > 0 {
-		values.Set("marker", strconv.Itoa(marker))
+		values.Set("marker", strconv.Itoa(int(marker)))
 	}
 	if len(types) > 0 {
 		for _, t := range types {
@@ -182,7 +182,7 @@ func (a *Api) GetUpdates(ctx context.Context) chan schemes.UpdateInterface {
 				close(ch)
 				return
 			case <-time.After(time.Duration(a.pause) * time.Second):
-				var marker int
+				var marker int64
 				for {
 					upds, err := a.getUpdates(50, a.timeout, marker, []string{})
 					if err != nil {
