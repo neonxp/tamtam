@@ -42,7 +42,7 @@ func main() {
 				AddCallback("Картинка", schemes.POSITIVE, "picture")
 
 			// Отправка сообщения с клавиатурой
-			err := api.Messages.Send(tamtam.NewMessage().SetUser(upd.Message.Sender.UserId).AddKeyboard(keyboard))
+			err := api.Messages.Send(tamtam.NewMessage().SetUser(upd.Message.Recipient.UserId).AddKeyboard(keyboard).SetText("Привет!"))
 			log.Printf("Answer: %#v", err)
 		case *schemes.MessageCallbackUpdate:
 			// Ответ на коллбек
@@ -51,7 +51,8 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				if err := api.Messages.Send(tamtam.NewMessage().SetUser(upd.Message.Sender.UserId).AddPhoto(photo)); err != nil {
+				msg := tamtam.NewMessage().SetUser(upd.Message.Recipient.UserId).AddPhoto(photo)
+				if err := api.Messages.Send(msg); err != nil {
 					log.Fatal(err)
 				}
 			}

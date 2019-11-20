@@ -104,7 +104,6 @@ type ButtonInterface interface {
 
 // Send this object when your bots wants to react to when a button is pressed
 type CallbackAnswer struct {
-	UserId       int64           `json:"user_id,omitempty"`
 	Message      *NewMessageBody `json:"message,omitempty"`      // Fill this if you want to modify current message
 	Notification string          `json:"notification,omitempty"` // Fill this if you just want to send one-time notification to user
 }
@@ -272,8 +271,7 @@ type Image struct {
 // Buttons in messages
 type InlineKeyboardAttachment struct {
 	Attachment
-	CallbackId string   `json:"callback_id"` // Unique identifier of keyboard
-	Payload    Keyboard `json:"payload"`
+	Payload Keyboard `json:"payload"`
 }
 
 // Request to attach keyboard to message
