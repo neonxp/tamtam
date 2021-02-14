@@ -161,6 +161,9 @@ func (a *Api) getUpdates(limit int, timeout int, marker int64, types []string) (
 	}
 	body, err := a.client.request(http.MethodGet, "updates", values, nil)
 	if err != nil {
+		if err == errLongPollTimeout {
+			return result, nil
+		}
 		return result, err
 	}
 	defer func() {

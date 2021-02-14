@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/neonxp/tamtam"
+	"github.com/neonxp/tamtam/schemes"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 			upd := <-ch
 			log.Printf("Received: %#v", upd)
 			switch upd := upd.(type) {
-			case tamtam.MessageCreatedUpdate:
+			case *schemes.MessageCreatedUpdate:
 				err := api.Messages.Send(
 					tamtam.NewMessage().
 						SetUser(upd.Message.Sender.UserId).

@@ -13,6 +13,7 @@ import (
 	"os/signal"
 
 	"github.com/neonxp/tamtam"
+	"github.com/neonxp/tamtam/schemes"
 )
 
 func main() {
@@ -28,13 +29,15 @@ func main() {
 		for upd := range api.GetUpdates(ctx) {
 			log.Printf("Received: %#v", upd)
 			switch upd := upd.(type) {
-			case *tamtam.MessageCreatedUpdate:
+			case *schemes.MessageCreatedUpdate:
 				err := api.Messages.Send(
 					tamtam.NewMessage().
 						SetUser(upd.Message.Sender.UserId).
 						SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text)),
 				)
-				log.Printf("Answer: %#v %#v", res, err)
+				if err != nil {
+					log.Printf("Error: %#v", err)
+				}
 			default:
 				log.Printf("Unknown type: %#v", upd)
 			}
