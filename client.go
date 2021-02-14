@@ -3,11 +3,16 @@ package tamtam
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/neonxp/tamtam/schemes"
+)
+
+var (
+	errLongPollTimeout = errors.New("timeout")
 )
 
 type client struct {
@@ -44,7 +49,7 @@ func (cl *client) requestReader(method, path string, query url.Values, body io.R
 		err, ok := err.(*url.Error)
 		if ok {
 			if err.Timeout() {
-				return nil, nil
+				return nil, errLongPollTimeout
 			}
 		}
 		return nil, err
